@@ -43,9 +43,13 @@ public class SimPathsMultiRun extends MultiRun {
 
 	public static Logger log = Logger.getLogger(SimPathsMultiRun.class);
 
+	private static Map<String, Object> multirun_args;
+
 	private static Map<String, Object> model_args;
 
 	private static Map<String, Object> collector_args;
+
+	private static Map<String, Object> parameter_args;
 
 	public static String configFile = "config.yml";  // Default config file name
 
@@ -57,7 +61,13 @@ public class SimPathsMultiRun extends MultiRun {
 	public static void main(String[] args) {
 
 		//Adjust the country and year to the value read from Excel, which is updated when the database is rebuilt. Otherwise it will set the country and year to the last one used to build the database
-		MultiKeyCoefficientMap lastDatabaseCountryAndYear = ExcelAssistant.loadCoefficientMap("input" + File.separator + Parameters.DatabaseCountryYearFilename + ".xlsx", "Data", 1, 1);
+		if (!parseYamlConfig(args)) {
+			// if parseYamlConfig returns false (indicating bad filename passed), exit main
+			return;
+		}
+
+
+		MultiKeyCoefficientMap lastDatabaseCountryAndYear = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + Parameters.DatabaseCountryYearFilename + ".xlsx", "Data", 1, 1);
 		if (lastDatabaseCountryAndYear.keySet().stream().anyMatch(key -> key.toString().equals("MultiKey[IT]"))) {
 			countryString = "Italy";
 		} else {
@@ -66,10 +76,7 @@ public class SimPathsMultiRun extends MultiRun {
 		String valueYear = lastDatabaseCountryAndYear.getValue(Country.UK.getCountryFromNameString(countryString).toString()).toString();
 		startYear = Integer.parseInt(valueYear);
 
-		if (!parseYamlConfig(args)) {
-			// if parseYamlConfig returns false (indicating bad filename passed), exit main
-			return;
-		}
+		if (multirun_args != null) updateMultirunParameters(multirun_args);
 
 		// Parse command line arguments to override defaults
 		if (!parseCommandLineArgs(args)) {
@@ -228,6 +235,11 @@ public class SimPathsMultiRun extends MultiRun {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 
+				if ("multirun_args".equals(key)) {
+					multirun_args = (Map<String, Object>) value;
+					continue;
+				}
+
 				if ("model_args".equals(key)) {
 					model_args = (Map<String, Object>) value;
 					continue;
@@ -238,25 +250,30 @@ public class SimPathsMultiRun extends MultiRun {
 					continue;
 				}
 
-				// Use reflection to dynamically set the field based on the key
-				try {
-					Field field = SimPathsMultiRun.class.getDeclaredField(key);
-					field.setAccessible(true);
-
-					// Determine the field type
-					Class<?> fieldType = field.getType();
-
-					// Convert the YAML value to the field type
-					Object convertedValue = convertToType(value, fieldType);
-
-					// Set the field value
-					field.set(null, convertedValue);
-
-					field.setAccessible(false);
-				} catch (NoSuchFieldException | IllegalAccessException e) {
-					// Handle exceptions if the field is not found or inaccessible
-					e.printStackTrace();
+				if ("parameter_args".equals(key)) {
+					parameter_args = (Map<String, Object>) value;
+					continue;
 				}
+
+				// Use reflection to dynamically set the field based on the key
+//				try {
+//					Field field = SimPathsMultiRun.class.getDeclaredField(key);
+//					field.setAccessible(true);
+//
+//					// Determine the field type
+//					Class<?> fieldType = field.getType();
+//
+//					// Convert the YAML value to the field type
+//					Object convertedValue = convertToType(value, fieldType);
+//
+//					// Set the field value
+//					field.set(null, convertedValue);
+//
+//					field.setAccessible(false);
+//				} catch (NoSuchFieldException | IllegalAccessException e) {
+//					// Handle exceptions if the field is not found or inaccessible
+//					e.printStackTrace();
+//				}
 			}
 
 		} catch (FileNotFoundException e) {
@@ -267,6 +284,33 @@ public class SimPathsMultiRun extends MultiRun {
 			}
 		}
 		return true;
+	}
+
+	public static void updateMultirunParameters(Map<String, Object> multirun_args) {
+
+		for (Map.Entry<String, Object> entry : multirun_args.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+
+			try {
+				Field field = SimPathsMultiRun.class.getDeclaredField(key);
+				field.setAccessible(true);
+
+				// Determine the field type
+				Class<?> fieldType = field.getType();
+
+				// Convert the YAML value to the field type
+				Object convertedValue = convertToType(value, fieldType);
+
+				// Set the field value
+				field.set(null, convertedValue);
+
+				field.setAccessible(false);
+			} catch (NoSuchFieldException | IllegalAccessException e) {
+				// Handle exceptions if the field is not found or inaccessible
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static void updateParameters(Object object, Map<String, Object> model_args) {
