@@ -276,7 +276,7 @@ public class Parameters {
     public static final int MIN_AGE_MATERNITY = 18;  			// Min age a person can give birth
     public static final int MAX_AGE_MATERNITY = 44;  			// Max age a person can give birth
 
-    public static final int BASE_PRICE_YEAR = 2015; 			// Base price year of model parameters
+    public static int BASE_PRICE_YEAR = 2015; 			// Base price year of model parameters
 
     public static double PROB_NEWBORN_IS_MALE = 0.5;
 
