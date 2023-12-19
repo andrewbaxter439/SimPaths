@@ -2,12 +2,13 @@
 package simpaths.experiment;
 
 // import Java packages
+import microsim.data.db.Experiment;
 import org.apache.log4j.Level;
 import org.apache.commons.cli.*;
 import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -66,6 +67,7 @@ public class SimPathsMultiRun extends MultiRun {
 			return;
 		}
 
+		if (parameter_args != null) updateParameters(parameter_args);
 
 		MultiKeyCoefficientMap lastDatabaseCountryAndYear = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + Parameters.DatabaseCountryYearFilename + ".xlsx", "Data", 1, 1);
 		if (lastDatabaseCountryAndYear.keySet().stream().anyMatch(key -> key.toString().equals("MultiKey[IT]"))) {
@@ -341,6 +343,84 @@ public class SimPathsMultiRun extends MultiRun {
 
 	}
 
+	public static void updateParameters(Map<String, Object> parameter_args) {
+
+		for (Map.Entry<String, Object> entry : parameter_args.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+
+			switch (key) {
+				case "WORKING_DIRECTORY":
+					Parameters.setWorkingDirectory(value.toString());
+//					setExperimentFolders(value.toString(), true);
+					break;
+				case "INPUT_DIRECTORY":
+					Parameters.setInputDirectory(value.toString());
+//					setExperimentFolders(value.toString());
+					break;
+				case "INPUT_DIRECTORY_INITIAL_POPULATIONS":
+					Parameters.setInputDirectoryInitialPopulations(value.toString());
+					break;
+				case "EUROMOD_OUTPUT_DIRECTORY":
+					Parameters.setEuromodOutputDirectory(value.toString());
+					break;
+				default:
+					try {
+						Field field = Parameters.class.getDeclaredField(key);
+						field.setAccessible(true);
+
+						// Determine the field type
+						Class<?> fieldType = field.getType();
+
+						// Convert the YAML value to the field type
+						Object convertedValue = convertToType(value, fieldType);
+
+						// Set the field value
+						field.set(Parameters.class, convertedValue);
+
+						field.setAccessible(false);
+					} catch (NoSuchFieldException | IllegalAccessException e) {
+						// Handle exceptions if the field is not found or inaccessible
+						e.printStackTrace();
+					}
+
+			}
+
+		}
+
+	}
+
+	public static void setExperimentFolders(String root_dir) {
+
+		try {
+			Field inputDir = Experiment.class.getDeclaredField("inputFolder");
+			inputDir.setAccessible(true);
+			inputDir.set(Experiment.class, root_dir + File.separator + "input");
+			inputDir.setAccessible(false);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+	}
+	public static void setExperimentFolders(String root_dir, boolean working_dir) {
+
+			try {
+				Field inputDir = Experiment.class.getDeclaredField("inputFolder");
+				inputDir.setAccessible(true);
+				inputDir.set(Experiment.class, root_dir + File.separator + "input");
+				inputDir.setAccessible(false);
+				if (working_dir) {
+					Field outputDir = Experiment.class.getDeclaredField("outputFolder");
+					outputDir.setAccessible(true);
+					outputDir.set(Experiment.class, root_dir + File.separator + "output");
+					outputDir.setAccessible(false);
+				}
+			} catch (NoSuchFieldException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+
+		}
+
 	private static Object convertToType(Object value, Class<?> targetType) {
 		// Convert the YAML value to the target type
 		if (int.class.equals(targetType)) {
@@ -370,6 +450,8 @@ public class SimPathsMultiRun extends MultiRun {
 		setCountry(model);		//Set country based on input arguments.
 		model.setPopSize(popSize);
 		model.setRandomSeedIfFixed(randomSeed);
+
+//		if (parameter_args != null) updateParameters(parameter_args);
 
 		if (model_args != null) updateParameters(model, model_args);
 
