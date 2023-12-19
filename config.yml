@@ -24,7 +24,9 @@ model_args:
 #    useWeights: false
 #    useSBAMMatching:
 #    projectMortality: true
-#    alignFertility: true
+    alignFertility: false
+    alignCohabitation: false
+    alignEducation: false
 #    labourMarketCovid19On: false
 #    projectFormalChildcare: true
 #    donorPoolAveraging: true
@@ -55,6 +57,5 @@ collector_args:
 #    dataDumpTimePeriod: 1.0
 
 parameter_args:
-  BASE_PRICE_YEAR: 2015
-  WORKING_DIRECTORY: "C:\\andy_local\\dumdum"
-#  INPUT_DIRECTORY: "C:\\andy_local\\dumdum\\input\\"
+  BASE_PRICE_YEAR: 2016
+#  WORKING_DIRECTORY: "C:\\SimPathsTest"
