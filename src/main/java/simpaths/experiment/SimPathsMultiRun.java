@@ -352,11 +352,11 @@ public class SimPathsMultiRun extends MultiRun {
 			switch (key) {
 				case "WORKING_DIRECTORY":
 					Parameters.setWorkingDirectory(value.toString());
-//					setExperimentFolders(value.toString(), true);
+					setExperimentFolders(value.toString(), true);
 					break;
 				case "INPUT_DIRECTORY":
 					Parameters.setInputDirectory(value.toString());
-//					setExperimentFolders(value.toString());
+					setExperimentFolders(value.toString());
 					break;
 				case "INPUT_DIRECTORY_INITIAL_POPULATIONS":
 					Parameters.setInputDirectoryInitialPopulations(value.toString());
@@ -407,12 +407,12 @@ public class SimPathsMultiRun extends MultiRun {
 			try {
 				Field inputDir = Experiment.class.getDeclaredField("inputFolder");
 				inputDir.setAccessible(true);
-				inputDir.set(Experiment.class, root_dir + File.separator + "input");
+				inputDir.set(null, root_dir + File.separator + "input");
 				inputDir.setAccessible(false);
 				if (working_dir) {
-					Field outputDir = Experiment.class.getDeclaredField("outputFolder");
+					Field outputDir = Experiment.class.getDeclaredField("outputRootFolder");
 					outputDir.setAccessible(true);
-					outputDir.set(Experiment.class, root_dir + File.separator + "output");
+					outputDir.set(null, root_dir + File.separator + "output");
 					outputDir.setAccessible(false);
 				}
 			} catch (NoSuchFieldException | IllegalAccessException e) {
