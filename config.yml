@@ -1,12 +1,13 @@
 # This file can be used to override defaults for multirun arguments.
 # These will be overridden by command-line arguments
 
-maxNumberOfRuns: 5
-executeWithGui: false
-randomSeed: 12345
-startYear: 2018
-endYear: 2025
-popSize: 75000
+multirun_args:
+  maxNumberOfRuns: 5
+  executeWithGui: false
+  randomSeed: 12345
+  startYear: 2018
+  endYear: 2025
+  popSize: 75000
 
 # For arguments to pass to the SimPathsModel itself:
 # Current model defaults can be overridden by uncommenting/changing
@@ -52,3 +53,8 @@ collector_args:
 #    persistHouseholds: false
 #    dataDumpStartTime: 0L
 #    dataDumpTimePeriod: 1.0
+
+parameter_args:
+  BASE_PRICE_YEAR: 2015
+  WORKING_DIRECTORY: "C:\\andy_local\\dumdum"
+#  INPUT_DIRECTORY: "C:\\andy_local\\dumdum\\input\\"
