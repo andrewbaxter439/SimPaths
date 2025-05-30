@@ -135,6 +135,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     @Transient private Integer dls_lag1;      //life satisfaction - score 1-7 lag 1
     @Column(name="he_eq5d")
     private Double he_eq5d;
+    @Transient private Boolean financialDistress;
 
     @Column(name="dhh_owned") private Boolean dhhOwned; // Person is a homeowner, true / false
     @Transient private Boolean receivesBenefitsFlag_L1; // Lag(1) of whether person receives benefits
@@ -550,7 +551,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
 
         // initialise random draws
         this.seed = seed;
-        innovations = new Innovations(32, 1, 1, seed);
+        innovations = new Innovations(33, 1, 1, seed);
 
         //Draw desired age and wage differential for parametric partnership formation for people above age to get married:
         double[] sampleDifferentials = setMarriageTargets();
@@ -680,6 +681,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         ConsiderMortality,
         ConsiderRetirement,
         Fertility,
+        FinancialDistress,
         GiveBirth,
         Health,
         HealthEQ5D,
@@ -730,6 +732,9 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             }
             case Fertility -> {
                 fertility();
+            }
+            case FinancialDistress -> {
+                updateFinancialDistress();
             }
             case GiveBirth -> {
     //			log.debug("Check whether to give birth for person " + this.getKey().getId());
@@ -955,6 +960,11 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             }
         }
         return toRetire;
+    }
+
+    private void updateFinancialDistress() {
+        double prob = 0.5;
+        setFinancialDistress(innovations.getDoubleDraw(32) < prob);
     }
     
     /*
@@ -4291,6 +4301,14 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     }
     public void setSocialCareProvision_lag1(SocialCareProvision careProvision) {
         socialCareProvision_lag1 = careProvision;
+    }
+
+    public boolean getFinancialDistress() {
+        if (financialDistress == null) { return false; }
+        return this.financialDistress;
+    }
+    public void setFinancialDistress(boolean value) {
+        this.financialDistress = value;
     }
 
     public void setDhm(Double dhm) {

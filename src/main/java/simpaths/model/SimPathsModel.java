@@ -567,6 +567,9 @@ public class SimPathsModel extends AbstractSimulationManager implements EventLis
         // equivalised disposable income
         addCollectionEventToAllYears(benefitUnits, BenefitUnit.Processes.CalculateChangeInEDI);
 
+        // Update financial distress
+        addCollectionEventToAllYears(persons, Person.Processes.FinancialDistress);
+
         // MENTAL HEALTH MODULE
         // Update mental health - determine (continuous) mental health level based on regression models + caseness
         yearlySchedule.addCollectionEvent(persons, Person.Processes.HealthMentalHM1); //Step 1 of mental health
