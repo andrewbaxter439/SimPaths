@@ -452,6 +452,19 @@ replace dls = round(dls_prediction) if missing(dls)
 bys dls_flag : sum dls 
 
 
+/***************************** Financial Distress ***************************************************************************/
+// This is a measure of subjective financial distress, corresponding to answering 4 or 5 to the question below:
+// How well would you say you yourself are managing financially these days? Would you say you are...
+// 1. Living comfortably
+// 2. Doing alright
+// 3. Just about getting by
+// 4. Finding it quite difficult
+// 5. Finding it very difficult
+
+recode finnow (1 2 3 = 0) (4 5 = 1) (else = .), gen(financial_distress)
+lab var financial_distress "DEMOGRAPHIC: Financial Distress"
+
+
 /****************************Ehtnicity*****************************************/
 /*Ethnic group derived from multiple sources such as self-reported as an adult, self-reported as a youth, reported by a household member, and ethnic group of biological parents.
 ethn_dv	-- Ethnic group (derived from multiple sources)
@@ -1484,7 +1497,7 @@ keep ivfio idhh idperson idpartner idfather idmother dct drgn1 dwt dnc02 dnc dgn
 	dimxwt dhhwt jbhrs jshrs j2hrs jbstat les_c3 les_c4 lessp_c3 lessp_c4 lesdf_c4 ydses_c5 month scghq2_dv ///
 	ypnbihs_dv yptciihs_dv yplgrs_dv ynbcpdf_dv ypncp ypnoab swv sedex ssscp sprfm sedag stm dagsp lhw l1_lhw pno ppno hgbioad1 hgbioad2 der adultchildflag ///
         econ_benefits econ_benefits_nonuc econ_benefits_uc ///
-	sedcsmpl sedrsmpl scedsmpl dhh_owned dukfr dchpd dagpns dagpns_sp CPI lesnr_c2 dlltsd_sp ypnoab_lvl *_flag  Int_Date dhe_mcs dhe_pcs dls dot unemp 
+	sedcsmpl sedrsmpl scedsmpl dhh_owned dukfr dchpd dagpns dagpns_sp CPI lesnr_c2 dlltsd_sp ypnoab_lvl *_flag  Int_Date dhe_mcs dhe_pcs dls dot unemp financial_distress
 
 sort swv idhh idperson 
 
