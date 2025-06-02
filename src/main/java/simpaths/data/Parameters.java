@@ -466,6 +466,9 @@ public class Parameters {
     private static MultiKeyCoefficientMap coeffCovarianceUnemploymentU1c;
     private static MultiKeyCoefficientMap coeffCovarianceUnemploymentU1d;
 
+    //Financial distress
+    private static MultiKeyCoefficientMap coeffCovarianceFinancialDistress;
+
     //Mental health
     private static MultiKeyCoefficientMap coeffCovarianceHM1Level; //Step 1 coefficients for mental health
     private static MultiKeyCoefficientMap coeffCovarianceHM2LevelMales; //Step 2 coefficients for mental health for males
@@ -701,6 +704,9 @@ public class Parameters {
     private static BinomialRegression regUnemploymentMaleNonGraduateU1b;
     private static BinomialRegression regUnemploymentFemaleGraduateU1c;
     private static BinomialRegression regUnemploymentFemaleNonGraduateU1d;
+
+    // Financial distress
+    private static BinomialRegression regFinancialDistress;
 
     //Health mental
     private static LinearRegression regHealthHM1Level;
@@ -1350,6 +1356,9 @@ public class Parameters {
         coeffCovarianceUnemploymentU1c = ExcelAssistant.loadCoefficientMap("input/reg_unemployment.xlsx", countryString + "_U1c", 1, columnsUnemploymentU1c);
         coeffCovarianceUnemploymentU1d = ExcelAssistant.loadCoefficientMap("input/reg_unemployment.xlsx", countryString + "_U1d", 1, columnsUnemploymentU1d);
 
+        //Financial distress
+        coeffCovarianceFinancialDistress = ExcelAssistant.loadCoefficientMap("input/reg_financial_distress.xlsx", countryString, 1, 44);
+
         //Health mental: level and case-based
         coeffCovarianceHM1Level = ExcelAssistant.loadCoefficientMap("input/reg_health_mental.xlsx", countryString + "_HM1_L", 1, columnsHealthHM1);
         coeffCovarianceHM2LevelMales = ExcelAssistant.loadCoefficientMap("input/reg_health_mental.xlsx", countryString + "_HM2_Males_L", 1, columnsHealthHM2Males);
@@ -1572,6 +1581,9 @@ public class Parameters {
         regUnemploymentMaleNonGraduateU1b = new BinomialRegression(RegressionType.Probit, ReversedIndicator.class, coeffCovarianceUnemploymentU1b);
         regUnemploymentFemaleGraduateU1c = new BinomialRegression(RegressionType.Probit, ReversedIndicator.class, coeffCovarianceUnemploymentU1c);
         regUnemploymentFemaleNonGraduateU1d = new BinomialRegression(RegressionType.Probit, ReversedIndicator.class, coeffCovarianceUnemploymentU1d);
+
+        //Financial distress
+        regFinancialDistress = new BinomialRegression(RegressionType.Logit, Indicator.class, coeffCovarianceFinancialDistress);
 
         //Health mental
         regHealthHM1Level = new LinearRegression(coeffCovarianceHM1Level);
@@ -2085,6 +2097,8 @@ public class Parameters {
     public static BinomialRegression getRegUnemploymentMaleNonGraduateU1b() { return regUnemploymentMaleNonGraduateU1b; }
     public static BinomialRegression getRegUnemploymentFemaleGraduateU1c() { return regUnemploymentFemaleGraduateU1c; }
     public static BinomialRegression getRegUnemploymentFemaleNonGraduateU1d() { return regUnemploymentFemaleNonGraduateU1d; }
+
+    public static BinomialRegression getRegFinancialDistress() { return regFinancialDistress; }
 
     public static LinearRegression getRegHealthHM1Level() { return regHealthHM1Level; }
     public static LinearRegression getRegHealthHM2LevelMales() { return regHealthHM2LevelMales; }
