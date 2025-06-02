@@ -951,7 +951,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     }
 
     private void updateFinancialDistress() {
-        double prob = 0.5;
+        double prob = Parameters.getRegFinancialDistress().getProbability(this, Person.DoublesVariables.class);
         setFinancialDistress(innovations.getDoubleDraw(32) < prob);
     }
     
@@ -2354,6 +2354,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         EquivalisedIncomeYearly, 							//Equivalised income for use with the security index
         Female,
         FertilityRate,
+        FinancialDistress,
         GrossEarningsYearly,
         GrossLabourIncomeMonthly,
         InverseMillsRatio,
@@ -2373,6 +2374,10 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         Ld_children_4_12IT,
         Lemployed,
         Lhw_L1,
+        Lhw_10,                         // Used by financial distress process
+        Lhw_20,                         // Used by financial distress process
+        Lhw_30,                         // Used by financial distress process
+        Lhw_40,                         // Used by financial distress process
         Les_c3_Employed_L1,
         Les_c3_NotEmployed_L1,
         Les_c3_Sick_L1,					//This is based on dlltsd
@@ -2400,6 +2405,8 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         Parents,
         PartTime_AND_Ld_children_3under,			//Interaction term conditional on if the person had a child under 3 at the previous time-step
         PartTimeRate,
+        PersistentEmployed,                         // Used by financial distress process
+        PersistentNonPoverty,                       // Used by financial distress process
         PersistentPoverty,
         PersistentUnemployed,
         PovertyToNonPoverty,
@@ -3042,6 +3049,9 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             case Female -> {
                 return dgn.equals(Gender.Female) ? 1. : 0.;
             }
+            case FinancialDistress -> {
+                return getFinancialDistress() ? 1. : 0.;
+            }
             case GrossEarningsYearly -> {
                 return getGrossEarningsYearly();
             }
@@ -3527,6 +3537,9 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             case PersistentUnemployed -> {
                 return (les_c4.equals(Les_c4.NotEmployed) && les_c4_lag1.equals(Les_c4.NotEmployed) && dlltsd.equals(Indicator.False) && dlltsd_lag1.equals(Indicator.False)) ? 1. : 0.;
             }
+            case PersistentEmployed -> {
+                return (les_c4.equals(Les_c4.EmployedOrSelfEmployed) && les_c4_lag1.equals(Les_c4.EmployedOrSelfEmployed) && dlltsd.equals(Indicator.False) && dlltsd_lag1.equals(Indicator.False)) ? 1. : 0.;
+            }
             case NonPovertyToPoverty -> {
                 if (benefitUnit.getAtRiskOfPoverty_lag1() != null) {
                     return (benefitUnit.getAtRiskOfPoverty_lag1() == 0 && benefitUnit.getAtRiskOfPoverty() == 1) ? 1. : 0.;
@@ -3540,6 +3553,11 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             case PersistentPoverty -> {
                 if (benefitUnit.getAtRiskOfPoverty_lag1() != null) {
                     return (benefitUnit.getAtRiskOfPoverty_lag1() == 1 && benefitUnit.getAtRiskOfPoverty() == 1) ? 1. : 0.;
+                } else return 0.;
+            }
+            case PersistentNonPoverty -> {
+                if (benefitUnit.getAtRiskOfPoverty_lag1() != null) {
+                    return (benefitUnit.getAtRiskOfPoverty_lag1() == 0 && benefitUnit.getAtRiskOfPoverty() == 0) ? 1. : 0.;
                 } else return 0.;
             }
             case RealIncomeChange -> {
@@ -3674,6 +3692,18 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
                 if (getNewWorkHours_lag1() != null && dgn.equals(Gender.Male)) {
                     return getNewWorkHours_lag1();
                 } else return 0.;
+            }
+            case Lhw_10 -> {
+                return getLabourSupplyWeekly().equals(Labour.TEN) ? 1. : 0.;
+            }
+            case Lhw_20 -> {
+                return getLabourSupplyWeekly().equals(Labour.TWENTY) ? 1. : 0.;
+            }
+            case Lhw_30 -> {
+                return getLabourSupplyWeekly().equals(Labour.THIRTY) ? 1. : 0.;
+            }
+            case Lhw_40 -> {
+                return getLabourSupplyWeekly().equals(Labour.FORTY) ? 1. : 0.;
             }
             case Covid19GrossPayMonthly_L1 -> {
                 return getCovidModuleGrossLabourIncome_lag1();
