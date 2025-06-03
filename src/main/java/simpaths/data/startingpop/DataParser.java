@@ -188,6 +188,13 @@ public class DataParser {
 				+ "ALTER TABLE " + personTable + " DROP COLUMN adultchildflag;"
 				+ "ALTER TABLE " + personTable + " ALTER COLUMN adult_child RENAME TO adultchildflag;"
 
+				//Financial distress
+				+ "ALTER TABLE " + personTable + " ADD financial_distress_add VARCHAR_IGNORECASE;"
+				+ "UPDATE " + personTable + " SET financial_distress_add = 'False' WHERE financial_distress = 0;"
+				+ "UPDATE " + personTable + " SET financial_distress_add = 'True' WHERE financial_distress = 1;"
+				+ "ALTER TABLE " + personTable + " DROP COLUMN financial_distress;"
+				+ "ALTER TABLE " + personTable + " ALTER COLUMN financial_distress_add RENAME TO financial_distress;"
+
 				//Homeownership
 				+ "ALTER TABLE " + personTable + " ADD dhh_owned_add VARCHAR_IGNORECASE;"
 				+ "UPDATE " + personTable + " SET dhh_owned_add = 'False' WHERE dhh_owned = 0;"
