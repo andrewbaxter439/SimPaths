@@ -452,19 +452,6 @@ replace dls = round(dls_prediction) if missing(dls)
 bys dls_flag : sum dls 
 
 
-/***************************** Financial Distress ***************************************************************************/
-// This is a measure of subjective financial distress, corresponding to answering 4 or 5 to the question below:
-// How well would you say you yourself are managing financially these days? Would you say you are...
-// 1. Living comfortably
-// 2. Doing alright
-// 3. Just about getting by
-// 4. Finding it quite difficult
-// 5. Finding it very difficult
-
-recode finnow (1 2 3 = 0) (4 5 = 1) (else = .), gen(financial_distress)
-lab var financial_distress "DEMOGRAPHIC: Financial Distress"
-
-
 /****************************Ehtnicity*****************************************/
 /*Ethnic group derived from multiple sources such as self-reported as an adult, self-reported as a youth, reported by a household member, and ethnic group of biological parents.
 ethn_dv	-- Ethnic group (derived from multiple sources)
@@ -1420,6 +1407,31 @@ label var econ_benefits_nonuc "Household income includes non-UC benefits"
 gen econ_benefits_uc=econ_benefits
 replace econ_benefits_uc=0 if benefits_uc==0
 label var econ_benefits_uc "Household income includes UC benefits"
+
+
+/***************************** Financial Distress ***************************************************************************/
+// This is a measure of subjective financial distress, corresponding to answering 4 or 5 to the question below:
+// How well would you say you yourself are managing financially these days? Would you say you are...
+// 1. Living comfortably
+// 2. Doing alright
+// 3. Just about getting by
+// 4. Finding it quite difficult
+// 5. Finding it very difficult
+
+recode finnow (1 2 3 = 0) (4 5 = 1) (else = .), gen(financial_distress)
+lab var financial_distress "DEMOGRAPHIC: Financial Distress"
+
+// Impute financial distress when missing
+preserve
+drop if dgn < 0 | dag < 0 | dhe < 0 | drgn1 < 0
+eststo predict_financial_distress: logit financial_distress c.dag i.dgn i.drgn1 i.swv i.dhe c.dls i.unemp i.dhh_owned c.yhhnb_asinh, vce(robust)
+restore
+estimates restore predict_financial_distress
+predict financial_distress_prediction
+
+replace financial_distress = 1 if missing(financial_distress) & financial_distress_prediction >= 0.5
+replace financial_distress = 0 if missing(financial_distress) & financial_distress_prediction < 0.5
+
 
 /*****************Was in continuous education sample***************************/
 //Generated from age_dv and ded variables. 1 includes first instance of not being in education.
