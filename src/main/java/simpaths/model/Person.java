@@ -135,7 +135,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     @Transient private Integer dls_lag1;      //life satisfaction - score 1-7 lag 1
     @Column(name="he_eq5d")
     private Double he_eq5d;
-    @Transient private Boolean financialDistress;
+    @Column(name="financial_distress") private Boolean financialDistress;
 
     @Column(name="dhh_owned") private Boolean dhhOwned; // Person is a homeowner, true / false
     @Transient private Boolean receivesBenefitsFlag_L1; // Lag(1) of whether person receives benefits

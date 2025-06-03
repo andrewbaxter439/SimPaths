@@ -128,6 +128,7 @@ public class Parameters {
         "dls",                  //life satisfaction
         "dhe_mcs",              //mental health - SF12 score MCS
         "dhe_pcs",              //physical health - SF12 score PCS
+        "financial_distress",	//financial distress
 		"dcpyy",				//years in partnership
 		"dcpagdf",				//partners age difference
 		"dnc02",				//number children aged 0-2
