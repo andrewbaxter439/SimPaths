@@ -964,7 +964,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
 
     private void updateFinancialDistress() {
         double prob = Parameters.getRegFinancialDistress().getProbability(this, Person.DoublesVariables.class);
-        setFinancialDistress(innovations.getDoubleDraw(32) < prob);
+        financialDistress = innovations.getDoubleDraw(32) < prob;
     }
     
     /*
@@ -3071,7 +3071,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
                 return dgn.equals(Gender.Female) ? 1. : 0.;
             }
             case FinancialDistress -> {
-                return getFinancialDistress() ? 1. : 0.;
+                return financialDistress ? 1. : 0.;
             }
             case GrossEarningsYearly -> {
                 return getGrossEarningsYearly();
@@ -4331,14 +4331,6 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     }
     public void setSocialCareProvision_lag1(SocialCareProvision careProvision) {
         socialCareProvision_lag1 = careProvision;
-    }
-
-    public boolean getFinancialDistress() {
-        if (financialDistress == null) { return false; }
-        return this.financialDistress;
-    }
-    public void setFinancialDistress(boolean value) {
-        this.financialDistress = value;
     }
 
     public void setDhm(Double dhm) {
