@@ -294,7 +294,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         bornInSimulation = true;
         dhhOwned = false;
         receivesBenefitsFlag = false;
-        financialDistress = false;
+        financialDistress = mother.getFinancialDistress();
         updateVariables(false);
     }
 
@@ -4311,6 +4311,10 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
 
     public void setDhmGhq(boolean dhm_ghq) {
         this.dhmGhq = dhm_ghq;
+    }
+
+    public boolean getFinancialDistress() {
+        return financialDistress;
     }
 
     public Indicator getNeedSocialCare() {
