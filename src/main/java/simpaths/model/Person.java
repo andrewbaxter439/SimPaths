@@ -300,6 +300,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         receivesBenefitsFlag = false;
         receivesBenefitsFlagNonUC = false;
         receivesBenefitsFlagUC = false;
+        financialDistress = false;
         updateVariables(false);
     }
 
@@ -525,6 +526,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         receivesBenefitsFlagNonUC_L1 = originalPerson.receivesBenefitsFlagNonUC_L1;
         receivesBenefitsFlagUC = originalPerson.receivesBenefitsFlagUC;
         receivesBenefitsFlagUC_L1 = originalPerson.receivesBenefitsFlagUC_L1;
+        financialDistress = originalPerson.financialDistress;
 
         if (originalPerson.fullTimeHourlyEarningsPotential > Parameters.MIN_HOURLY_WAGE_RATE) {
             fullTimeHourlyEarningsPotential = Math.min(Parameters.MAX_HOURLY_WAGE_RATE, Math.max(Parameters.MIN_HOURLY_WAGE_RATE, originalPerson.fullTimeHourlyEarningsPotential));
