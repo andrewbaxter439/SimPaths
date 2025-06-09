@@ -2436,8 +2436,6 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         Parents,
         PartTime_AND_Ld_children_3under,			//Interaction term conditional on if the person had a child under 3 at the previous time-step
         PartTimeRate,
-        PersistentEmployed,                         // Used by financial distress process
-        PersistentNonPoverty,                       // Used by financial distress process
         PersistentPoverty,
         PersistentUnemployed,
         PovertyToNonPoverty,
@@ -3583,9 +3581,6 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             case PersistentUnemployed -> {
                 return (les_c4.equals(Les_c4.NotEmployed) && les_c4_lag1.equals(Les_c4.NotEmployed) && dlltsd.equals(Indicator.False) && dlltsd_lag1.equals(Indicator.False)) ? 1. : 0.;
             }
-            case PersistentEmployed -> {
-                return (les_c4.equals(Les_c4.EmployedOrSelfEmployed) && les_c4_lag1.equals(Les_c4.EmployedOrSelfEmployed) && dlltsd.equals(Indicator.False) && dlltsd_lag1.equals(Indicator.False)) ? 1. : 0.;
-            }
             case NonPovertyToPoverty -> {
                 if (benefitUnit.getAtRiskOfPoverty_lag1() != null) {
                     return (benefitUnit.getAtRiskOfPoverty_lag1() == 0 && benefitUnit.getAtRiskOfPoverty() == 1) ? 1. : 0.;
@@ -3599,11 +3594,6 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             case PersistentPoverty -> {
                 if (benefitUnit.getAtRiskOfPoverty_lag1() != null) {
                     return (benefitUnit.getAtRiskOfPoverty_lag1() == 1 && benefitUnit.getAtRiskOfPoverty() == 1) ? 1. : 0.;
-                } else return 0.;
-            }
-            case PersistentNonPoverty -> {
-                if (benefitUnit.getAtRiskOfPoverty_lag1() != null) {
-                    return (benefitUnit.getAtRiskOfPoverty_lag1() == 0 && benefitUnit.getAtRiskOfPoverty() == 0) ? 1. : 0.;
                 } else return 0.;
             }
             case RealIncomeChange -> {
