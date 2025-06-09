@@ -66,6 +66,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     @Transient private Education deh_c3_lag1;  //Lag(1) of education level
     @Enumerated(EnumType.STRING) private Education dehm_c3;      //Mother's education level
     @Enumerated(EnumType.STRING) private Education dehf_c3;      //Father's education level
+    @Enumerated(EnumType.STRING) private Ethnicity dot;          //Ethnicity
     @Enumerated(EnumType.STRING) private Indicator ded;          // in continuous education
     @Enumerated(EnumType.STRING) private Indicator der;          // return to education
     @Enumerated(EnumType.STRING) private Les_c4 les_c4;      //Activity (employment) status
@@ -284,6 +285,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         dhm = 9.;			//Set to median for under 18's as a placeholder
         dhmGhq = false;
         deh_c3 = Education.Low;
+        dot = mother.getDot();
         les_c4 = Les_c4.Student;				//Set lag activity status as Student, i.e. in education from birth
         leftEducation = false;
         les_c7_covid = Les_c7_covid.Student;
@@ -520,6 +522,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         yearlyEquivalisedConsumption = originalPerson.yearlyEquivalisedConsumption;
         sIndexYearMap = new LinkedHashMap<Integer, Double>();
         dhhOwned = originalPerson.dhhOwned;
+        dot = originalPerson.dot;
         receivesBenefitsFlag = originalPerson.receivesBenefitsFlag;
         receivesBenefitsFlag_L1 = originalPerson.receivesBenefitsFlag_L1;
         receivesBenefitsFlagNonUC = originalPerson.receivesBenefitsFlagNonUC;
@@ -2375,6 +2378,11 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         Employmentsonfullfurlough,
         EquivalisedConsumptionYearly,
         EquivalisedIncomeYearly, 							//Equivalised income for use with the security index
+        EthnicityWhite,
+        EthnicityMixed,
+        EthnicityAsian,
+        EthnicityBlack,
+        EthnicityOther,
         Female,
         FertilityRate,
         FinancialDistress,
@@ -3062,6 +3070,21 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             }
             case Dlltsd_L1 -> {
                 return Indicator.True.equals(dlltsd_lag1) ? 1. : 0.;
+            }
+            case EthnicityWhite -> {
+                return dot.equals(Ethnicity.White) ? 1. : 0.;
+            }
+            case EthnicityMixed -> {
+                return dot.equals(Ethnicity.Mixed) ? 1. : 0.;
+            }
+            case EthnicityAsian -> {
+                return dot.equals(Ethnicity.Asian) ? 1. : 0.;
+            }
+            case EthnicityBlack -> {
+                return dot.equals(Ethnicity.Black) ? 1. : 0.;
+            }
+            case EthnicityOther -> {
+                return dot.equals(Ethnicity.Other) ? 1. : 0.;
             }
             case FertilityRate -> {
                 if (ioFlag)
@@ -4353,6 +4376,10 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
 
     public void setDhmGhq(boolean dhm_ghq) {
         this.dhmGhq = dhm_ghq;
+    }
+
+    public Ethnicity getDot() {
+        return dot;
     }
 
     public boolean getFinancialDistress() {

@@ -121,6 +121,7 @@ public class Parameters {
 		"dehf_c3",				//highest education level of father
 		"ded",					//in education dummy
 		"der",					//return to education dummy
+		"dot",					//ethnicity
 		"dhe",					//health status
 		"dhm",					//mental health status
 		"scghq2_dv",			//mental health status case based
