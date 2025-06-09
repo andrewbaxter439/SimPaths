@@ -1359,7 +1359,7 @@ public class Parameters {
         coeffCovarianceUnemploymentU1d = ExcelAssistant.loadCoefficientMap("input/reg_unemployment.xlsx", countryString + "_U1d", 1, columnsUnemploymentU1d);
 
         //Financial distress
-        coeffCovarianceFinancialDistress = ExcelAssistant.loadCoefficientMap("input/reg_financial_distress.xlsx", countryString, 1, 44);
+        coeffCovarianceFinancialDistress = ExcelAssistant.loadCoefficientMap("input/reg_financial_distress.xlsx", countryString, 1, 48);
 
         //Health mental: level and case-based
         coeffCovarianceHM1Level = ExcelAssistant.loadCoefficientMap("input/reg_health_mental.xlsx", countryString + "_HM1_L", 1, columnsHealthHM1);
