@@ -84,6 +84,13 @@ public class Parameters {
 		"ils_dispy",			//Disposable income : from EUROMOD output data after tax / benefit transfers (monthly time-scale)
 		"ils_benmt",			//EUROMOD output variable: income list: monetary benefits
 		"ils_bennt",			//EUROMOD output variable: income list: non-monetary benefits
+        "bsauc_s",               //EUROMOD output variable: simulated UC receipt
+        "bho_s",
+        "bwkmt_s",
+        "bfamt_s",
+        "bunct_s",
+        "bsa_s",
+        "bsadi_s"
     };
 
     public static final String[] HOUSEHOLD_VARIABLES_INITIAL = new String[] {
@@ -151,7 +158,10 @@ public class Parameters {
         "son_socare_hrs",       //number of hours of informal care received from son
         "other_socare_hrs",     //number of hours of informal care received from other
         "aidhrs",               //number of hours of informal care provided (total)
-        "careWho"               //indicator for whom informal care is provided
+        "careWho",              //indicator for whom informal care is provided
+        "econ_benefits",        //indicator of benefit receipt
+        "econ_benefits_uc",     //indicator of UC receipt
+        "econ_benefits_nonuc"   //indicator of other benefit receipt
 		//"yem", 					//employment income
 		//"yse", 					//self-employment income
 
@@ -281,6 +291,8 @@ public class Parameters {
     public static int BASE_PRICE_YEAR = 2015; 			// Base price year of model parameters
 
     public static double PROB_NEWBORN_IS_MALE = 0.5;            // Must be strictly greater than 0.0 and less than 1.0
+
+    public static boolean UC_ROLLOUT = true;              // Whether UC is available in population or not
 
     public static final boolean systemOut = true;
 
@@ -1129,17 +1141,17 @@ public class Parameters {
             columnsHealthH1b = 35;
             columnsHealthH2b = 35;
             columnsHealthHM1 = 30;
-            columnsHealthHM2Males = 9;
-            columnsHealthHM2Females = 9;
+            columnsHealthHM2Males = 15;
+            columnsHealthHM2Females = 15;
             columnsHealthMCS1 = 30;
-            columnsHealthMCS2Males = 9;
-            columnsHealthMCS2Females = 9;
+            columnsHealthMCS2Males = 15;
+            columnsHealthMCS2Females = 15;
             columnsHealthPCS1 = 30;
-            columnsHealthPCS2Males = 9;
-            columnsHealthPCS2Females = 9;
+            columnsHealthPCS2Males = 15;
+            columnsHealthPCS2Females = 15;
             columnsLifeSatisfaction1 = 30;
-            columnsLifeSatisfaction2Males = 9;
-            columnsLifeSatisfaction2Females = 9;
+            columnsLifeSatisfaction2Males = 15;
+            columnsLifeSatisfaction2Females = 15;
             columnsHealthEQ5D = 8;
             columnsSocialCareS1a = 17;
             columnsSocialCareS1b = 18;
