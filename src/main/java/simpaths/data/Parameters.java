@@ -1022,6 +1022,7 @@ public class Parameters {
         int columnsUnemploymentU1b = -1;
         int columnsUnemploymentU1c = -1;
         int columnsUnemploymentU1d = -1;
+        int columnsFinancialDistress = -1;
         int columnsEducationE1a = -1;
         int columnsEducationE1b = -1;
         int columnsEducationE2a = -1;
@@ -1183,6 +1184,7 @@ public class Parameters {
             columnsUnemploymentU1b = 19;
             columnsUnemploymentU1c = 19;
             columnsUnemploymentU1d = 19;
+            columnsFinancialDistress = 50;
             columnsEducationE1a = 19;
             columnsEducationE1b = 25;
             columnsEducationE2a = 11;
@@ -1359,7 +1361,7 @@ public class Parameters {
         coeffCovarianceUnemploymentU1d = ExcelAssistant.loadCoefficientMap("input/reg_unemployment.xlsx", countryString + "_U1d", 1, columnsUnemploymentU1d);
 
         //Financial distress
-        coeffCovarianceFinancialDistress = ExcelAssistant.loadCoefficientMap("input/reg_financial_distress.xlsx", countryString, 1, 48);
+        coeffCovarianceFinancialDistress = ExcelAssistant.loadCoefficientMap("input/reg_financial_distress.xlsx", countryString, 1, columnsFinancialDistress);
 
         //Health mental: level and case-based
         coeffCovarianceHM1Level = ExcelAssistant.loadCoefficientMap("input/reg_health_mental.xlsx", countryString + "_HM1_L", 1, columnsHealthHM1);
