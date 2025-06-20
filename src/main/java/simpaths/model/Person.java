@@ -66,6 +66,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     @Transient private Education deh_c3_lag1;  //Lag(1) of education level
     @Enumerated(EnumType.STRING) private Education dehm_c3;      //Mother's education level
     @Enumerated(EnumType.STRING) private Education dehf_c3;      //Father's education level
+    @Enumerated(EnumType.STRING) private Ethnicity dot;          //Ethnicity
     @Enumerated(EnumType.STRING) private Indicator ded;          // in continuous education
     @Enumerated(EnumType.STRING) private Indicator der;          // return to education
     @Enumerated(EnumType.STRING) private Les_c4 les_c4;      //Activity (employment) status
@@ -135,6 +136,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
     @Transient private Integer dls_lag1;      //life satisfaction - score 1-7 lag 1
     @Column(name="he_eq5d")
     private Double he_eq5d;
+    @Column(name="financial_distress") private Boolean financialDistress;
 
     @Column(name="dhh_owned") private Boolean dhhOwned; // Person is a homeowner, true / false
     @Transient private Boolean receivesBenefitsFlag_L1; // Lag(1) of whether person receives benefits
@@ -283,6 +285,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         dhm = 9.;			//Set to median for under 18's as a placeholder
         dhmGhq = false;
         deh_c3 = Education.Low;
+        dot = mother.getDot();
         les_c4 = Les_c4.Student;				//Set lag activity status as Student, i.e. in education from birth
         leftEducation = false;
         les_c7_covid = Les_c7_covid.Student;
@@ -299,6 +302,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         receivesBenefitsFlag = false;
         receivesBenefitsFlagNonUC = false;
         receivesBenefitsFlagUC = false;
+        financialDistress = mother.getFinancialDistress();
         updateVariables(false);
     }
 
@@ -518,12 +522,14 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         yearlyEquivalisedConsumption = originalPerson.yearlyEquivalisedConsumption;
         sIndexYearMap = new LinkedHashMap<Integer, Double>();
         dhhOwned = originalPerson.dhhOwned;
+        dot = originalPerson.dot;
         receivesBenefitsFlag = originalPerson.receivesBenefitsFlag;
         receivesBenefitsFlag_L1 = originalPerson.receivesBenefitsFlag_L1;
         receivesBenefitsFlagNonUC = originalPerson.receivesBenefitsFlagNonUC;
         receivesBenefitsFlagNonUC_L1 = originalPerson.receivesBenefitsFlagNonUC_L1;
         receivesBenefitsFlagUC = originalPerson.receivesBenefitsFlagUC;
         receivesBenefitsFlagUC_L1 = originalPerson.receivesBenefitsFlagUC_L1;
+        financialDistress = originalPerson.financialDistress;
 
         if (originalPerson.fullTimeHourlyEarningsPotential > Parameters.MIN_HOURLY_WAGE_RATE) {
             fullTimeHourlyEarningsPotential = Math.min(Parameters.MAX_HOURLY_WAGE_RATE, Math.max(Parameters.MIN_HOURLY_WAGE_RATE, originalPerson.fullTimeHourlyEarningsPotential));
@@ -550,7 +556,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
 
         // initialise random draws
         this.seed = seed;
-        innovations = new Innovations(32, 1, 1, seed);
+        innovations = new Innovations(33, 1, 1, seed);
 
         //Draw desired age and wage differential for parametric partnership formation for people above age to get married:
         double[] sampleDifferentials = setMarriageTargets();
@@ -680,6 +686,7 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         ConsiderMortality,
         ConsiderRetirement,
         Fertility,
+        FinancialDistress,
         GiveBirth,
         Health,
         HealthEQ5D,
@@ -730,6 +737,9 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             }
             case Fertility -> {
                 fertility();
+            }
+            case FinancialDistress -> {
+                updateFinancialDistress();
             }
             case GiveBirth -> {
     //			log.debug("Check whether to give birth for person " + this.getKey().getId());
@@ -955,6 +965,11 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             }
         }
         return toRetire;
+    }
+
+    private void updateFinancialDistress() {
+        double prob = Parameters.getRegFinancialDistress().getProbability(this, Person.DoublesVariables.class);
+        financialDistress = innovations.getDoubleDraw(32) < prob;
     }
     
     /*
@@ -2363,8 +2378,14 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         Employmentsonfullfurlough,
         EquivalisedConsumptionYearly,
         EquivalisedIncomeYearly, 							//Equivalised income for use with the security index
+        EthnicityWhite,
+        EthnicityMixed,
+        EthnicityAsian,
+        EthnicityBlack,
+        EthnicityOther,
         Female,
         FertilityRate,
+        FinancialDistress,
         GrossEarningsYearly,
         GrossLabourIncomeMonthly,
         InverseMillsRatio,
@@ -2384,6 +2405,10 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
         Ld_children_4_12IT,
         Lemployed,
         Lhw_L1,
+        Lhw_10,                         // Used by financial distress process
+        Lhw_20,                         // Used by financial distress process
+        Lhw_30,                         // Used by financial distress process
+        Lhw_40,                         // Used by financial distress process
         Les_c3_Employed_L1,
         Les_c3_NotEmployed_L1,
         Les_c3_Sick_L1,					//This is based on dlltsd
@@ -3044,6 +3069,21 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             case Dlltsd_L1 -> {
                 return Indicator.True.equals(dlltsd_lag1) ? 1. : 0.;
             }
+            case EthnicityWhite -> {
+                return dot.equals(Ethnicity.White) ? 1. : 0.;
+            }
+            case EthnicityMixed -> {
+                return dot.equals(Ethnicity.Mixed) ? 1. : 0.;
+            }
+            case EthnicityAsian -> {
+                return dot.equals(Ethnicity.Asian) ? 1. : 0.;
+            }
+            case EthnicityBlack -> {
+                return dot.equals(Ethnicity.Black) ? 1. : 0.;
+            }
+            case EthnicityOther -> {
+                return dot.equals(Ethnicity.Other) ? 1. : 0.;
+            }
             case FertilityRate -> {
                 if (ioFlag)
                     return Parameters.getFertilityProjectionsByYear(getYear());
@@ -3052,6 +3092,9 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
             }
             case Female -> {
                 return dgn.equals(Gender.Female) ? 1. : 0.;
+            }
+            case FinancialDistress -> {
+                return financialDistress ? 1. : 0.;
             }
             case GrossEarningsYearly -> {
                 return getGrossEarningsYearly();
@@ -3707,6 +3750,18 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
                     return getNewWorkHours_lag1();
                 } else return 0.;
             }
+            case Lhw_10 -> {
+                return getLabourSupplyWeekly().equals(Labour.TEN) ? 1. : 0.;
+            }
+            case Lhw_20 -> {
+                return getLabourSupplyWeekly().equals(Labour.TWENTY) ? 1. : 0.;
+            }
+            case Lhw_30 -> {
+                return getLabourSupplyWeekly().equals(Labour.THIRTY) ? 1. : 0.;
+            }
+            case Lhw_40 -> {
+                return getLabourSupplyWeekly().equals(Labour.FORTY) ? 1. : 0.;
+            }
             case Covid19GrossPayMonthly_L1 -> {
                 return getCovidModuleGrossLabourIncome_lag1();
             }
@@ -4311,6 +4366,14 @@ public class Person implements EventListener, IDoubleSource, IIntSource, Weight,
 
     public void setDhmGhq(boolean dhm_ghq) {
         this.dhmGhq = dhm_ghq;
+    }
+
+    public Ethnicity getDot() {
+        return dot;
+    }
+
+    public boolean getFinancialDistress() {
+        return financialDistress;
     }
 
     public Indicator getNeedSocialCare() {
