@@ -408,18 +408,18 @@ public class SimPathsMultiRun extends MultiRun {
 			Object value = entry.getValue();
 
 			switch (key) {
-				case "WORKING_DIRECTORY":
+				case "working_directory":
 					Parameters.setWorkingDirectory(value.toString());
 					setExperimentFolders(value.toString(), true);
 					break;
-				case "INPUT_DIRECTORY":
+				case "input_directory":
 					Parameters.setInputDirectory(value.toString());
 					setExperimentFolders(value.toString());
 					break;
-				case "INPUT_DIRECTORY_INITIAL_POPULATIONS":
+				case "input_directory_initial_populations":
 					Parameters.setInputDirectoryInitialPopulations(value.toString());
 					break;
-				case "EUROMOD_OUTPUT_DIRECTORY":
+				case "euromod_output_directory":
 					Parameters.setEuromodOutputDirectory(value.toString());
 					break;
 				default:
