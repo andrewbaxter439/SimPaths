@@ -504,7 +504,7 @@ public class SimPathsMultiRun extends MultiRun {
 
 		SimPathsModel model = new SimPathsModel(Country.getCountryFromNameString(countryString), startYear);
 		if (persist_population) model.setPersistPopulation(true);
-		if (persist_root) model.setPersistDatabasePath("./input/input");
+		if (persist_root) model.setPersistDatabasePath(Parameters.getInputDirectory() + "input");
 		updateLocalParameters(model);
 		if (modelArgs != null)
 			updateParameters(model, modelArgs);
