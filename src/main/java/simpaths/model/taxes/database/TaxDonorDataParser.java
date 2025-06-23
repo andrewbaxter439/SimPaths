@@ -63,7 +63,7 @@ public class TaxDonorDataParser {
         Connection conn = null;
         try {
             Class.forName("org.h2.Driver");
-            conn = DriverManager.getConnection("jdbc:h2:file:./input" + File.separator + "input;TRACE_LEVEL_FILE=0;TRACE_LEVEL_SYSTEM_OUT=0;AUTO_SERVER=TRUE", "sa", "");
+            conn = DriverManager.getConnection("jdbc:h2:file:" + Parameters.getInputDirectory() + "input;TRACE_LEVEL_FILE=0;TRACE_LEVEL_SYSTEM_OUT=0;AUTO_SERVER=TRUE", "sa", "");
 
             createTaxDonorTables(conn, country, startYear);
             updateDefaultDonorTables(conn, country);
