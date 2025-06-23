@@ -3418,12 +3418,21 @@ public class Parameters {
         EUROMOD_TRAINING_DIRECTORY = EUROMOD_OUTPUT_DIRECTORY + "training" + File.separator;
     }
     public static void setInputDirectoryInitialPopulations(String inputDirectoryInitialPopulations) {
-
-        INPUT_DIRECTORY_INITIAL_POPULATIONS = inputDirectoryInitialPopulations;
+        File inputpath = new File(inputDirectoryInitialPopulations);
+        if (inputpath.isAbsolute()){
+            INPUT_DIRECTORY_INITIAL_POPULATIONS = inputDirectoryInitialPopulations + File.separator;
+        } else {
+            INPUT_DIRECTORY_INITIAL_POPULATIONS = WORKING_DIRECTORY + File.separator + inputDirectoryInitialPopulations + File.separator;
+        }
     }
 
     public static void setEuromodOutputDirectory(String euromodOutputDirectory) {
-        EUROMOD_OUTPUT_DIRECTORY = euromodOutputDirectory;
+        File inputPath = new File(euromodOutputDirectory);
+        if (inputPath.isAbsolute()){
+            EUROMOD_OUTPUT_DIRECTORY = euromodOutputDirectory + File.separator;
+        } else {
+            EUROMOD_OUTPUT_DIRECTORY = WORKING_DIRECTORY + File.separator + euromodOutputDirectory + File.separator;
+        }
         EUROMOD_TRAINING_DIRECTORY = EUROMOD_OUTPUT_DIRECTORY + "training" + File.separator;
     }
 
