@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import simpaths.data.Parameters;
+import simpaths.data.XLSXfileWriter;
 import simpaths.model.SimPathsModel;
 import microsim.data.db.Experiment;
 import microsim.data.MultiKeyCoefficientMap;
@@ -58,13 +59,15 @@ public class SimPathsMultiRun extends MultiRun {
 	private Long counter = 0L;
 	public static Logger log = Logger.getLogger(SimPathsMultiRun.class);
 
+	private static boolean persist_population;
+	private static boolean persist_root;
+
 	/**
 	 *
 	 * 	MAIN PROGRAM ENTRY FOR MULTI-SIMULATION
 	 *
 	 */
 	public static void main(String[] args) {
-
 
 		// process Yaml config file
 		if (!parseYamlConfig(args)) {
@@ -74,7 +77,6 @@ public class SimPathsMultiRun extends MultiRun {
 
 		if (parameterArgs != null)
 			updateParameters(parameterArgs);
-
 		// set default values for country and start year
 		MultiKeyCoefficientMap lastDatabaseCountryAndYear = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + File.separator + Parameters.DatabaseCountryYearFilename + ".xlsx", "Data", 1, 1);
 		if (lastDatabaseCountryAndYear.keySet().stream().anyMatch(key -> key.toString().equals("MultiKey[IT]"))) {
@@ -89,12 +91,21 @@ public class SimPathsMultiRun extends MultiRun {
 		if (innovationArgs!=null)
 			updateLocalParameters(innovationArgs);
 
+		parseYamlConfig(args);
+
 		// Parse command line arguments to override defaults
 		if (!parseCommandLineArgs(args)) {
 			// If parseCommandLineArgs returns false (indicating help option is provided), exit main
 			return;
 		}
 		country = Country.getCountryFromNameString(countryString);
+
+		//Save the last selected country and year to Excel to use in the model
+		String[] columnNames = {"Country", "Year"};
+		Object[][] data = new Object[1][columnNames.length];
+		data[0][0] = country.toString();
+		data[0][1] = startYear;
+		XLSXfileWriter.createXLSX(Parameters.INPUT_DIRECTORY, Parameters.DatabaseCountryYearFilename, "Data", columnNames, data);
 
 		if (flagDatabaseSetup) {
 
@@ -155,6 +166,15 @@ public class SimPathsMultiRun extends MultiRun {
 		Option fileOption = new Option("f", "Output to file");
 		options.addOption(fileOption);
 
+		Option persistRoot = new Option("P", "persist", true,
+				"Write and read processed database to root or run-specific database. Accepted arguments:" +
+				"\n - root: persist to root output folder (input/)" +
+				"\n - run: persist to run output folder (output/[yyyymmdd_seed]/input/)" +
+				"\n - none: do not write/read processed dataset.\n" +
+				"(default: `run` - multirun copy in output folder)");
+		persistRoot.setArgName("persist");
+		options.addOption(persistRoot);
+
 		Option helpOption = new Option("h", "help", false, "Print this help message");
 		options.addOption(helpOption);
 
@@ -196,6 +216,29 @@ public class SimPathsMultiRun extends MultiRun {
 			if (cmd.hasOption("p")) {
 				popSize = Integer.parseInt(cmd.getOptionValue("p"));
 			}
+
+				switch (cmd.getOptionValue("P", "run")) {
+					case "root":
+						log.info("Persisting processed data to root folder");
+						persist_population = true;
+						persist_root = true;
+						break;
+					case "run":
+						log.info("Persisting processed data to run folder");
+						persist_population = true;
+						persist_root = false;
+						break;
+					case "none":
+						log.info("Not persisting processed data");
+						persist_population = false;
+						persist_root = false;
+						break;
+					default:
+						System.out.println("Persist option `" + cmd.getOptionValue("P") + "` not recognised. Valid values: `none`, `root`, `run`. Persisting processed data to run folder");
+						persist_population = true;
+						persist_root = false;
+				}
+
 			if (cmd.hasOption("f")) {
 				try {
 					File logDir = new File("output/logs");
@@ -453,6 +496,8 @@ public class SimPathsMultiRun extends MultiRun {
 	public void buildExperiment(SimulationEngine engine) {
 
 		SimPathsModel model = new SimPathsModel(Country.getCountryFromNameString(countryString), startYear);
+		if (persist_population) model.setPersistPopulation(true);
+		if (persist_root) model.setPersistDatabasePath("./input/input");
 		updateLocalParameters(model);
 		if (modelArgs != null)
 			updateParameters(model, modelArgs);

@@ -7,7 +7,6 @@ import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import simpaths.model.Person;
 import simpaths.model.enums.Labour;
-import simpaths.model.enums.ReversedIndicator;
 
 import java.security.InvalidParameterException;
 import java.util.*;
@@ -37,6 +36,36 @@ public class ManagerRegressions {
             }
             case HealthHM2LevelFemales -> {
                 return Parameters.getRegHealthHM2LevelFemales();
+            }
+            case HealthMCS1 -> {
+                return Parameters.getRegHealthMCS1();
+            }
+            case HealthMCS2Males -> {
+                return Parameters.getRegHealthMCS2Males();
+            }
+            case HealthMCS2Females -> {
+                return Parameters.getRegHealthMCS2Females();
+            }
+            case HealthPCS1 -> {
+                return Parameters.getRegHealthPCS1();
+            }
+            case HealthPCS2Males -> {
+                return Parameters.getRegHealthPCS2Males();
+            }
+            case HealthPCS2Females -> {
+                return Parameters.getRegHealthPCS2Females();
+            }
+            case LifeSatisfaction1 -> {
+                return Parameters.getRegLifeSatisfaction1();
+            }
+            case LifeSatisfaction2Males -> {
+                return Parameters.getRegLifeSatisfaction2Males();
+            }
+            case LifeSatisfaction2Females -> {
+                return Parameters.getRegLifeSatisfaction2Females();
+            }
+            case HealthEQ5D -> {
+                return Parameters.getRegEQ5D();
             }
             case SocialCareS1b -> {
                 return Parameters.getRegCareHoursS1b();
@@ -167,6 +196,12 @@ public class ManagerRegressions {
             throw new RuntimeException("requested ordered regression is not recognised: " + regression.name());
 
         switch (regression) {
+            case HealthH1a -> {
+                return Parameters.getRegHealthH1a();
+            }
+            case HealthH1b -> {
+                return Parameters.getRegHealthH1b();
+            }
             case EducationE2a -> {
                 return Parameters.getRegEducationE2a();
             }
@@ -182,12 +217,6 @@ public class ManagerRegressions {
             throw new RuntimeException("requested generalised ordered regression is not recognised: " + regression.name());
 
         switch (regression) {
-            case HealthH1a -> {
-                return Parameters.getRegHealthH1a();
-            }
-            case HealthH1b -> {
-                return Parameters.getRegHealthH1b();
-            }
             default -> {
                 throw new RuntimeException("unrecognised regression (1)");
             }
@@ -214,6 +243,19 @@ public class ManagerRegressions {
             }
             default -> {
                 throw new RuntimeException("unrecognised regression (1)");
+            }
+        }
+    }
+
+    public static boolean isDiscreteChoiceModel(RegressionName regression) {
+
+        switch (regression.getType()) {
+
+            case Logit, Probit, OrderedLogit, OrderedProbit, GenOrderedLogit, GenOrderedProbit, MultinomialLogit-> {
+                return true;
+            }
+            default -> {
+                return false;
             }
         }
     }

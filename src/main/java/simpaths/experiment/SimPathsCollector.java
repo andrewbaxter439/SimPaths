@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import simpaths.data.filters.FlexibleInLabourSupplyFilter;
+import simpaths.data.statistics.EmploymentStatistics;
+import simpaths.data.statistics.HealthStatistics;
 import simpaths.model.BenefitUnit;
 import simpaths.model.SimPathsModel;
 import simpaths.model.enums.Quintiles;
@@ -57,6 +59,11 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
     @GUIparameter(description="Report alignment adjustments")
     private boolean persistStatistics3 = true;
 
+    private boolean persistEmploymentStatistics = false;
+
+    @GUIparameter(description="Report health statistics")
+    private boolean persistHealthStatistics = true;
+
     @GUIparameter(description="Toggle to turn database persistence on/off")
     private boolean exportToDatabase = false;
 
@@ -91,6 +98,10 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
 
     private Statistics3 stats3;
 
+    private EmploymentStatistics statsEmployment;
+
+    private HealthStatistics statsHealth;
+
     private GiniPersonalGrossEarnings giniPersonalGrossEarnings;
 
     private GiniEquivalisedHouseholdDisposableIncome giniEquivalisedHouseholdDisposableIncome;
@@ -114,6 +125,10 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
     private DataExport exportStatistics2;
 
     private DataExport exportStatistics3;
+
+    private DataExport exportStatisticsEmployment;
+
+    private DataExport exportHealthStatistics;
 
     protected MultiTraceFunction.Double fGiniPersonalGrossEarningsNational;
 
@@ -150,6 +165,8 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
         DumpStatistics,
         DumpStatistics2,
 		DumpStatistics3,
+        DumpStatisticsEmployment,
+        DumpHealthStatistics
     }
 
 
@@ -218,6 +235,25 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
 				log.error(e.getMessage());
 			}
 			break;
+        case DumpStatisticsEmployment:
+            statsEmployment.update(model);
+            try {
+                exportStatisticsEmployment.export();
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+            break;
+        case DumpHealthStatistics:
+            String[] genders = {"Total", "Male", "Female"};
+            for (String gender_s: genders) {
+                statsHealth.update(model, gender_s);
+                try {
+                    exportHealthStatistics.export();
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
+            break;
         }
     }
 
@@ -234,6 +270,8 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
         stats = new Statistics();
         stats2 = new Statistics2();
         stats3 = new Statistics3();
+        statsEmployment = new EmploymentStatistics();
+        statsHealth = new HealthStatistics();
 
         //For export to database or .csv files.
         if(persistPersons)
@@ -248,6 +286,10 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
             exportStatistics2 = new DataExport(stats2, exportToDatabase, exportToCSV);
         if (persistStatistics3)
             exportStatistics3 = new DataExport(stats3, exportToDatabase, exportToCSV);
+        if (persistEmploymentStatistics)
+            exportStatisticsEmployment = new DataExport(statsEmployment, exportToDatabase, exportToCSV);
+        if (persistHealthStatistics)
+            exportHealthStatistics = new DataExport(statsHealth, exportToDatabase, exportToCSV);
 
 
         if (calculateGiniCoefficients) {
@@ -307,6 +349,14 @@ public class SimPathsCollector extends AbstractSimulationCollectorManager implem
 		if (persistStatistics3) {
 			getEngine().getEventQueue().scheduleRepeat(new SingleTargetEvent(this, Processes.DumpStatistics3), model.getStartYear() + dataDumpStartTime, ordering, dataDumpTimePeriod);
 		}
+
+        if (persistEmploymentStatistics) {
+			getEngine().getEventQueue().scheduleRepeat(new SingleTargetEvent(this, Processes.DumpStatisticsEmployment), model.getStartYear() + dataDumpStartTime, ordering, dataDumpTimePeriod);
+        }
+
+        if (persistHealthStatistics){
+			getEngine().getEventQueue().scheduleRepeat(new SingleTargetEvent(this, Processes.DumpHealthStatistics), model.getStartYear() + dataDumpStartTime, ordering, dataDumpTimePeriod);
+        }
 
         if (persistPersons) {
             getEngine().getEventQueue().scheduleRepeat(new SingleTargetEvent(this, Processes.DumpPersons), model.getStartYear() + dataDumpStartTime, ordering, dataDumpTimePeriod);

@@ -2,17 +2,14 @@
 package simpaths.data;
 
 // import Java packages
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.security.InvalidParameterException;
-import java.util.*;
 
+import microsim.data.MultiKeyCoefficientMap;
+import microsim.data.excel.ExcelAssistant;
+import microsim.statistics.regression.*;
 // import plug-in packages
-import microsim.statistics.IDoubleSource;
+import org.apache.commons.io.FileUtils;
 import simpaths.data.startingpop.DataParser;
 import simpaths.model.AnnuityRates;
-import simpaths.model.Person;
 import simpaths.model.enums.*;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.map.LinkedMap;
@@ -21,17 +18,18 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.util.Pair;
-
-// import JAS-mine packages
-import microsim.data.excel.ExcelAssistant;
-import microsim.data.MultiKeyCoefficientMap;
-import microsim.statistics.regression.*;
-
-// import LABOURsim packages
-import simpaths.model.taxes.DonorTaxUnit;
+import simpaths.data.startingpop.DataParser;
+import simpaths.model.AnnuityRates;
 import simpaths.model.decisions.Grids;
+import simpaths.model.enums.*;
+import simpaths.model.taxes.DonorTaxUnit;
 import simpaths.model.taxes.MatchFeature;
 import simpaths.model.taxes.database.TaxDonorDataParser;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.*;
 
 import static microsim.statistics.regression.RegressionUtils.appendCoefficientMaps;
 
@@ -86,6 +84,13 @@ public class Parameters {
 		"ils_dispy",			//Disposable income : from EUROMOD output data after tax / benefit transfers (monthly time-scale)
 		"ils_benmt",			//EUROMOD output variable: income list: monetary benefits
 		"ils_bennt",			//EUROMOD output variable: income list: non-monetary benefits
+        "bsauc_s",               //EUROMOD output variable: simulated UC receipt
+        "bho_s",
+        "bwkmt_s",
+        "bfamt_s",
+        "bunct_s",
+        "bsa_s",
+        "bsadi_s"
     };
 
     public static final String[] HOUSEHOLD_VARIABLES_INITIAL = new String[] {
@@ -116,10 +121,15 @@ public class Parameters {
 		"dehf_c3",				//highest education level of father
 		"ded",					//in education dummy
 		"der",					//return to education dummy
+		"dot",					//ethnicity
 		"dhe",					//health status
 		"dhm",					//mental health status
 		"scghq2_dv",			//mental health status case based
 		"dhm_ghq",				//mental health status case based dummy (1 = psychologically distressed)
+        "dls",                  //life satisfaction
+        "dhe_mcs",              //mental health - SF12 score MCS
+        "dhe_pcs",              //physical health - SF12 score PCS
+        "financial_distress",	//financial distress
 		"dcpyy",				//years in partnership
 		"dcpagdf",				//partners age difference
 		"dnc02",				//number children aged 0-2
@@ -137,6 +147,7 @@ public class Parameters {
 		"dgn", 					//gender
 		"les_c4", 				//labour employment status
 		"lhw", 					//hours worked per week
+        "l1_lhw",               //hours worked per week in the previous year
 		"adultchildflag",		//flag indicating adult child living at home in the data
 		"dhh_owned",			//flag indicating if individual is a homeowner
 		"potential_earnings_hourly", //initial value of hourly earnings from the data
@@ -149,7 +160,10 @@ public class Parameters {
         "son_socare_hrs",       //number of hours of informal care received from son
         "other_socare_hrs",     //number of hours of informal care received from other
         "aidhrs",               //number of hours of informal care provided (total)
-        "careWho"               //indicator for whom informal care is provided
+        "careWho",              //indicator for whom informal care is provided
+        "econ_benefits",        //indicator of benefit receipt
+        "econ_benefits_uc",     //indicator of UC receipt
+        "econ_benefits_nonuc"   //indicator of other benefit receipt
 		//"yem", 					//employment income
 		//"yse", 					//self-employment income
 
@@ -280,6 +294,8 @@ public class Parameters {
 
     public static double PROB_NEWBORN_IS_MALE = 0.5;            // Must be strictly greater than 0.0 and less than 1.0
 
+    public static boolean UC_ROLLOUT = true;              // Whether UC is available in population or not
+
     public static final boolean systemOut = true;
 
     //Bootstrap all the regression coefficients if true, or only the female labour participation regressions when false
@@ -333,6 +349,8 @@ public class Parameters {
 
     public static boolean saveImperfectTaxDBMatches = false;
     public static final int IMPERFECT_THRESHOLD = 5999;
+
+    public static String eq5dConversionParameters = "lawrence";
 
 
     /////////////////////////////////////////////////////////////////// INITIALISATION OF DATA STRUCTURES //////////////////////////////////
@@ -450,6 +468,9 @@ public class Parameters {
     private static MultiKeyCoefficientMap coeffCovarianceUnemploymentU1c;
     private static MultiKeyCoefficientMap coeffCovarianceUnemploymentU1d;
 
+    //Financial distress
+    private static MultiKeyCoefficientMap coeffCovarianceFinancialDistress;
+
     //Mental health
     private static MultiKeyCoefficientMap coeffCovarianceHM1Level; //Step 1 coefficients for mental health
     private static MultiKeyCoefficientMap coeffCovarianceHM2LevelMales; //Step 2 coefficients for mental health for males
@@ -458,6 +479,21 @@ public class Parameters {
     private static MultiKeyCoefficientMap coeffCovarianceHM1Case;
     private static MultiKeyCoefficientMap coeffCovarianceHM2CaseMales;
     private static MultiKeyCoefficientMap coeffCovarianceHM2CaseFemales;
+
+    //Health
+    private static MultiKeyCoefficientMap coeffCovarianceDHE_MCS1;
+    private static MultiKeyCoefficientMap coeffCovarianceDHE_MCS2Males;
+    private static MultiKeyCoefficientMap coeffCovarianceDHE_MCS2Females;
+
+    private static MultiKeyCoefficientMap coeffCovarianceDHE_PCS1;
+    private static MultiKeyCoefficientMap coeffCovarianceDHE_PCS2Males;
+    private static MultiKeyCoefficientMap coeffCovarianceDHE_PCS2Females;
+
+    private static MultiKeyCoefficientMap coeffCovarianceDLS1;
+    private static MultiKeyCoefficientMap coeffCovarianceDLS2Males;
+    private static MultiKeyCoefficientMap coeffCovarianceDLS2Females;
+
+    private static MultiKeyCoefficientMap coeffCovarianceEQ5D;
 
     //Education
     private static MultiKeyCoefficientMap coeffCovarianceEducationE1a;
@@ -602,6 +638,13 @@ public class Parameters {
     //Psychological distress cases by age and gender
     private static MultiKeyCoefficientMap validationPsychDistressByAge, validationPsychDistressByAgeLow, validationPsychDistressByAgeMed, validationPsychDistressByAgeHigh;
 
+
+    // Health
+    private static MultiKeyCoefficientMap validationHealthMCSByAge, validationHealthPCSByAge;
+
+    // Life Satisfaction
+    private static MultiKeyCoefficientMap validationLifeSatisfactionByAge;
+
     //Employment by gender
     private static MultiKeyCoefficientMap validationEmploymentByGender;
 
@@ -634,8 +677,8 @@ public class Parameters {
     /////////////////////////////////////////////////////////////////// REGRESSION OBJECTS //////////////////////////////////////////
 
     //Health
-    private static GeneralisedOrderedRegression regHealthH1a;
-    private static GeneralisedOrderedRegression regHealthH1b;
+    private static OrderedRegression regHealthH1a;
+    private static OrderedRegression regHealthH1b;
     private static BinomialRegression regHealthH2b;
 
     //Social care
@@ -664,6 +707,9 @@ public class Parameters {
     private static BinomialRegression regUnemploymentFemaleGraduateU1c;
     private static BinomialRegression regUnemploymentFemaleNonGraduateU1d;
 
+    // Financial distress
+    private static BinomialRegression regFinancialDistress;
+
     //Health mental
     private static LinearRegression regHealthHM1Level;
     private static LinearRegression regHealthHM2LevelMales;
@@ -672,6 +718,21 @@ public class Parameters {
     private static BinomialRegression regHealthHM1Case;
     private static BinomialRegression regHealthHM2CaseMales;
     private static BinomialRegression regHealthHM2CaseFemales;
+
+    //Health
+    private static LinearRegression regHealthMCS1;
+    private static LinearRegression regHealthMCS2Males;
+    private static LinearRegression regHealthMCS2Females;
+
+    private static LinearRegression regHealthPCS1;
+    private static LinearRegression regHealthPCS2Males;
+    private static LinearRegression regHealthPCS2Females;
+
+    private static LinearRegression regLifeSatisfaction1;
+    private static LinearRegression regLifeSatisfaction2Males;
+    private static LinearRegression regLifeSatisfaction2Females;
+
+    private static LinearRegression regHealthEQ5D;
 
     //Education
     private static BinomialRegression regEducationE1a;
@@ -929,6 +990,16 @@ public class Parameters {
         int columnsHealthHM1 = -1;
         int columnsHealthHM2Males = -1;
         int columnsHealthHM2Females = -1;
+        int columnsHealthMCS1 = -1;
+        int columnsHealthMCS2Males = -1;
+        int columnsHealthMCS2Females = -1;
+        int columnsHealthPCS1 = -1;
+        int columnsHealthPCS2Males = -1;
+        int columnsHealthPCS2Females = -1;
+        int columnsLifeSatisfaction1 = -1;
+        int columnsLifeSatisfaction2Males = -1;
+        int columnsLifeSatisfaction2Females = -1;
+        int columnsHealthEQ5D = -1;
         int columnsSocialCareS1a = -1;
         int columnsSocialCareS1b = -1;
         int columnsSocialCareS2a = -1;
@@ -951,6 +1022,7 @@ public class Parameters {
         int columnsUnemploymentU1b = -1;
         int columnsUnemploymentU1c = -1;
         int columnsUnemploymentU1d = -1;
+        int columnsFinancialDistress = -1;
         int columnsEducationE1a = -1;
         int columnsEducationE1b = -1;
         int columnsEducationE2a = -1;
@@ -992,6 +1064,9 @@ public class Parameters {
         int columnsValidationDisabledByAgeGroup = -1;
         int columnsValidationHealthByAgeGroup = -1;
         int columnsValidationMentalHealthByAgeGroup = -1;
+        int columnsValidationHealthMCSByAgeGroup = -1;
+        int columnsValidationPhysicalHealthByAgeGroup = -1;
+        int columnsValidationLifeSatisfactionByAgeGroup = -1;
         int columnsValidationEmploymentByGender = -1;
         int columnsValidationEmploymentByGenderAndAge = -1;
         int columnsValidationEmploymentByMaternity = -1;
@@ -1074,9 +1149,19 @@ public class Parameters {
             columnsHealthH1a = 28;
             columnsHealthH1b = 35;
             columnsHealthH2b = 35;
-            columnsHealthHM1 = 31;
-            columnsHealthHM2Males = 11;
-            columnsHealthHM2Females = 11;
+            columnsHealthHM1 = 30;
+            columnsHealthHM2Males = 15;
+            columnsHealthHM2Females = 15;
+            columnsHealthMCS1 = 30;
+            columnsHealthMCS2Males = 15;
+            columnsHealthMCS2Females = 15;
+            columnsHealthPCS1 = 30;
+            columnsHealthPCS2Males = 15;
+            columnsHealthPCS2Females = 15;
+            columnsLifeSatisfaction1 = 30;
+            columnsLifeSatisfaction2Males = 15;
+            columnsLifeSatisfaction2Females = 15;
+            columnsHealthEQ5D = 8;
             columnsSocialCareS1a = 17;
             columnsSocialCareS1b = 18;
             columnsSocialCareS2a = 32;
@@ -1099,9 +1184,10 @@ public class Parameters {
             columnsUnemploymentU1b = 19;
             columnsUnemploymentU1c = 19;
             columnsUnemploymentU1d = 19;
+            columnsFinancialDistress = 50;
             columnsEducationE1a = 19;
             columnsEducationE1b = 25;
-            columnsEducationE2a = 20;
+            columnsEducationE2a = 11;
             columnsPartnershipU1a = 27;
             columnsPartnershipU1b = 31;
             columnsPartnershipU2b = 38;
@@ -1136,6 +1222,9 @@ public class Parameters {
             columnsValidationDisabledByAgeGroup = 6;
             columnsValidationHealthByAgeGroup = 6;
             columnsValidationMentalHealthByAgeGroup = 18;
+            columnsValidationHealthMCSByAgeGroup = 18;
+            columnsValidationPhysicalHealthByAgeGroup = 18;
+            columnsValidationLifeSatisfactionByAgeGroup = 18;
             columnsValidationEmploymentByGender = 2;
             columnsValidationEmploymentByGenderAndAge = 18;
             columnsValidationEmploymentByMaternity = 3;
@@ -1271,6 +1360,9 @@ public class Parameters {
         coeffCovarianceUnemploymentU1c = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_unemployment.xlsx", countryString + "_U1c", 1, columnsUnemploymentU1c);
         coeffCovarianceUnemploymentU1d = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_unemployment.xlsx", countryString + "_U1d", 1, columnsUnemploymentU1d);
 
+        //Financial distress
+        coeffCovarianceFinancialDistress = ExcelAssistant.loadCoefficientMap("input/reg_financial_distress.xlsx", countryString, 1, columnsFinancialDistress);
+
         //Health mental: level and case-based
         coeffCovarianceHM1Level = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_health_mental.xlsx", countryString + "_HM1_L", 1, columnsHealthHM1);
         coeffCovarianceHM2LevelMales = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_health_mental.xlsx", countryString + "_HM2_Males_L", 1, columnsHealthHM2Males);
@@ -1278,6 +1370,26 @@ public class Parameters {
         coeffCovarianceHM1Case = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_health_mental.xlsx", countryString + "_HM1_C", 1, columnsHealthHM1);
         coeffCovarianceHM2CaseMales = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_health_mental.xlsx", countryString + "_HM2_Males_C", 1, columnsHealthHM2Males);
         coeffCovarianceHM2CaseFemales = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_health_mental.xlsx", countryString + "_HM2_Females_C", 1, columnsHealthHM2Females);
+
+
+        //Health
+        coeffCovarianceDHE_MCS1 = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DHE_MCS1", 1, columnsHealthMCS1);
+        coeffCovarianceDHE_MCS2Males = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DHE_MCS2_Males", 1, columnsHealthMCS2Males);
+        coeffCovarianceDHE_MCS2Females = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DHE_MCS2_Females", 1, columnsHealthMCS2Females);
+
+        coeffCovarianceDHE_PCS1 = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DHE_PCS1", 1, columnsHealthPCS1);
+        coeffCovarianceDHE_PCS2Males = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DHE_PCS2_Males", 1, columnsHealthPCS2Males);
+        coeffCovarianceDHE_PCS2Females = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DHE_PCS2_Females", 1, columnsHealthPCS2Females);
+
+        coeffCovarianceDLS1 = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DLS1", 1, columnsLifeSatisfaction1);
+        coeffCovarianceDLS2Males = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DLS2_Males", 1, columnsLifeSatisfaction2Males);
+        coeffCovarianceDLS2Females = ExcelAssistant.loadCoefficientMap("input/reg_health_wellbeing.xlsx", countryString + "_DLS2_Females", 1, columnsLifeSatisfaction2Females);
+
+        loadEQ5DParameters(countryString, columnsHealthEQ5D);
+
+        //Life satisfaction
+
+//        coeffCovarianceDLS1 = ExcelAssistant.loadCoefficientMap("input/reg_lifesatisfaction.xlsx", countryString + "_DLS1", 1, columnsLifeSatisfaction1);
 
         //Education
         coeffCovarianceEducationE1a = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_education.xlsx", countryString + "_E1a", 1, columnsEducationE1a);
@@ -1444,8 +1556,8 @@ public class Parameters {
         }
 
         //Health
-        regHealthH1a = new GeneralisedOrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1a);
-        regHealthH1b = new GeneralisedOrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1b);
+        regHealthH1a = new OrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1a);
+        regHealthH1b = new OrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1b);
         regHealthH2b = new BinomialRegression(RegressionType.Probit, Indicator.class, coeffCovarianceHealthH2b);
 
         //Social care
@@ -1474,6 +1586,9 @@ public class Parameters {
         regUnemploymentFemaleGraduateU1c = new BinomialRegression(RegressionType.Probit, ReversedIndicator.class, coeffCovarianceUnemploymentU1c);
         regUnemploymentFemaleNonGraduateU1d = new BinomialRegression(RegressionType.Probit, ReversedIndicator.class, coeffCovarianceUnemploymentU1d);
 
+        //Financial distress
+        regFinancialDistress = new BinomialRegression(RegressionType.Logit, Indicator.class, coeffCovarianceFinancialDistress);
+
         //Health mental
         regHealthHM1Level = new LinearRegression(coeffCovarianceHM1Level);
         regHealthHM2LevelMales = new LinearRegression(coeffCovarianceHM2LevelMales);
@@ -1483,10 +1598,20 @@ public class Parameters {
         regHealthHM2CaseMales = new BinomialRegression(RegressionType.Logit, Indicator.class, coeffCovarianceHM2CaseMales);
         regHealthHM2CaseFemales = new BinomialRegression(RegressionType.Logit, Indicator.class, coeffCovarianceHM2CaseFemales);
 
-        //Education
+        //Health
+        regHealthMCS1 = new LinearRegression(coeffCovarianceDHE_MCS1);
+        regHealthMCS2Males = new LinearRegression(coeffCovarianceDHE_MCS2Males);
+        regHealthMCS2Females = new LinearRegression(coeffCovarianceDHE_MCS2Females);
+        regHealthPCS1 = new LinearRegression(coeffCovarianceDHE_PCS1);
+        regHealthPCS2Males = new LinearRegression(coeffCovarianceDHE_PCS2Males);
+        regHealthPCS2Females = new LinearRegression(coeffCovarianceDHE_PCS2Females);
+        regLifeSatisfaction1 = new LinearRegression(coeffCovarianceDLS1);
+        regLifeSatisfaction2Males = new LinearRegression(coeffCovarianceDLS2Males);
+        regLifeSatisfaction2Females = new LinearRegression(coeffCovarianceDLS2Females);
+
         regEducationE1a = new BinomialRegression(RegressionType.Probit, Indicator.class, coeffCovarianceEducationE1a);
         regEducationE1b = new BinomialRegression(RegressionType.Probit, Indicator.class, coeffCovarianceEducationE1b);
-        regEducationE2a = new OrderedRegression(RegressionType.OrderedProbit, Education.class, coeffCovarianceEducationE2a);
+        regEducationE2a = new OrderedRegression<>(RegressionType.GenOrderedLogit, Education.class, coeffCovarianceEducationE2a);
 
         //Partnership
         if (country.equals(Country.UK)) {
@@ -1621,6 +1746,11 @@ public class Parameters {
 
         //Mental health by age and gender
         validationMentalHealthByAge = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "validation_statistics.xlsx", countryString + "_mentalHealthByAgeGroup", 1, columnsValidationMentalHealthByAgeGroup);
+
+
+        validationHealthMCSByAge = ExcelAssistant.loadCoefficientMap("input/validation_statistics.xlsx", countryString + "_healthMCSByAgeGroup", 1, columnsValidationHealthMCSByAgeGroup);
+        validationHealthPCSByAge = ExcelAssistant.loadCoefficientMap("input/validation_statistics.xlsx", countryString + "_healthPCSByAgeGroup", 1, columnsValidationPhysicalHealthByAgeGroup);
+        validationLifeSatisfactionByAge = ExcelAssistant.loadCoefficientMap("input/validation_statistics.xlsx", countryString + "_lifeSatisfactionByAgeGroup", 1, columnsValidationLifeSatisfactionByAgeGroup);
 
         //Psychological distress by age and gender
         validationPsychDistressByAge = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "validation_statistics.xlsx", countryString + "_psychDistressByAgeGroup", 1, columnsValidationMentalHealthByAgeGroup);
@@ -1807,7 +1937,19 @@ public class Parameters {
 
     public static TreeMap<Integer, String> calculateEUROMODpolicySchedule(Country country) {
         //Load current values for policy description and initiation year
-        MultiKeyCoefficientMap currentEUROMODpolicySchedule = ExcelAssistant.loadCoefficientMap(getInputDirectory() + EUROMODpolicyScheduleFilename + ".xlsx", country.toString(), 1, 3);
+        MultiKeyCoefficientMap currentEUROMODpolicySchedule;
+
+        if (trainingFlag) {
+            File trainingSchedule = new File(getInputDirectory() + "EUROMODoutput" + File.separator + "training" + File.separator + EUROMODpolicyScheduleFilename + ".xlsx");
+            File runSchedule = new File(getInputDirectory() + EUROMODpolicyScheduleFilename + ".xlsx");
+            try {
+                FileUtils.copyFile(trainingSchedule, runSchedule);
+            } catch (IOException e) {
+                System.err.println("Could not replace EUROMODoutput.xlsx from training data");
+            }
+        }
+        
+        currentEUROMODpolicySchedule = ExcelAssistant.loadCoefficientMap(getInputDirectory() + EUROMODpolicyScheduleFilename + ".xlsx", country.toString(), 1, 3);
         TreeMap<Integer, String> newEUROMODpolicySchedule = new TreeMap<>();
 
         for(Object o: currentEUROMODpolicySchedule.keySet()) {
@@ -1932,8 +2074,8 @@ public class Parameters {
         Parameters.employmentsFurloughedFlex = employmentsFurloughedFlex;
     }
 
-    public static GeneralisedOrderedRegression getRegHealthH1a() { return regHealthH1a; }
-    public static GeneralisedOrderedRegression getRegHealthH1b() { return regHealthH1b; }
+    public static OrderedRegression getRegHealthH1a() { return regHealthH1a; }
+    public static OrderedRegression getRegHealthH1b() { return regHealthH1b; }
     public static BinomialRegression getRegHealthH2b() { return regHealthH2b; }
 
     public static BinomialRegression getRegReceiveCareS1a() { return regReceiveCareS1a; }
@@ -1960,6 +2102,8 @@ public class Parameters {
     public static BinomialRegression getRegUnemploymentFemaleGraduateU1c() { return regUnemploymentFemaleGraduateU1c; }
     public static BinomialRegression getRegUnemploymentFemaleNonGraduateU1d() { return regUnemploymentFemaleNonGraduateU1d; }
 
+    public static BinomialRegression getRegFinancialDistress() { return regFinancialDistress; }
+
     public static LinearRegression getRegHealthHM1Level() { return regHealthHM1Level; }
     public static LinearRegression getRegHealthHM2LevelMales() { return regHealthHM2LevelMales; }
     public static LinearRegression getRegHealthHM2LevelFemales() { return regHealthHM2LevelFemales; }
@@ -1967,9 +2111,23 @@ public class Parameters {
     public static BinomialRegression getRegHealthHM2CaseMales() {return regHealthHM2CaseMales;}
     public static BinomialRegression getRegHealthHM2CaseFemales() {return regHealthHM2CaseFemales;}
 
+    public static LinearRegression getRegHealthMCS1() { return regHealthMCS1; }
+    public static LinearRegression getRegHealthMCS2Males() { return regHealthMCS2Males;   }
+    public static LinearRegression getRegHealthMCS2Females() { return regHealthMCS2Females; }
+
+    public static LinearRegression getRegHealthPCS1() { return regHealthPCS1; }
+    public static LinearRegression getRegHealthPCS2Males() { return regHealthPCS2Males; }
+    public static LinearRegression getRegHealthPCS2Females() { return regHealthPCS2Females; }
+
+    public static LinearRegression getRegLifeSatisfaction1() { return regLifeSatisfaction1; }
+    public static LinearRegression getRegLifeSatisfaction2Males() { return regLifeSatisfaction2Males; }
+    public static LinearRegression getRegLifeSatisfaction2Females() { return regLifeSatisfaction2Females; }
+
     public static BinomialRegression getRegEducationE1a() {return regEducationE1a;}
     public static BinomialRegression getRegEducationE1b() {return regEducationE1b;}
     public static OrderedRegression getRegEducationE2a() {return regEducationE2a;}
+
+    public static LinearRegression getRegEQ5D() { return regHealthEQ5D; };
 
     public static BinomialRegression getRegPartnershipU1a() {return regPartnershipU1a;}
     public static BinomialRegression getRegPartnershipU1b() {return regPartnershipU1b;}
@@ -2260,6 +2418,19 @@ public class Parameters {
     public static MultiKeyCoefficientMap getValidationMentalHealthByAge() {
         return validationMentalHealthByAge;
     }
+
+    public static MultiKeyCoefficientMap getValidationHealthMCSByAge() {
+        return validationHealthMCSByAge;
+    }
+
+    public static MultiKeyCoefficientMap getValidationHealthPCSByAge() {
+        return validationHealthPCSByAge;
+    }
+
+    public static MultiKeyCoefficientMap getValidationLifeSatisfactionByAge() {
+        return validationLifeSatisfactionByAge;
+    }
+
 
     public static MultiKeyCoefficientMap getValidationPsychDistressByAge() {
         return validationPsychDistressByAge;
@@ -3191,6 +3362,11 @@ public class Parameters {
         String filePath = "./input" + File.separator + "input.mv.db";
         safeDelete(filePath);
 
+        // Detect if data available; set to testing data if not
+        Collection<File> testList = FileUtils.listFiles(new File(Parameters.getInputDirectoryInitialPopulations()), new String[]{"csv"}, false);
+        if (testList.isEmpty())
+            Parameters.setTrainingFlag(true);
+
         // populate new database for starting data
         DataParser.databaseFromCSV(country, executeWithGui); // Initial database tables
 
@@ -3213,6 +3389,14 @@ public class Parameters {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    public static void loadEQ5DParameters(String countryString, int columnsHealthEQ5D) {
+
+        coeffCovarianceEQ5D = ExcelAssistant.loadCoefficientMap(getInputDirectory() + "reg_eq5d.xlsx", countryString + "_EQ5D_" + eq5dConversionParameters, 1, columnsHealthEQ5D);
+
+        regHealthEQ5D = new LinearRegression(coeffCovarianceEQ5D);
+
     }
     public static void setWorkingDirectory(String workingDirectory) {
         WORKING_DIRECTORY = workingDirectory;

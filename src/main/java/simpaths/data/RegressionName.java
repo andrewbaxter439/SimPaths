@@ -9,7 +9,7 @@ public enum RegressionName {
 
     EducationE1a(RegressionType.Probit),
     EducationE1b(RegressionType.Probit),
-    EducationE2a(RegressionType.OrderedProbit),
+    EducationE2a(RegressionType.OrderedLogit),
 
     FertilityF1a(RegressionType.Probit),
     FertilityF1b(RegressionType.Probit),
@@ -18,8 +18,8 @@ public enum RegressionName {
     PartnershipU1b(RegressionType.Probit),
     PartnershipU2b(RegressionType.Probit),
 
-    HealthH1a(RegressionType.GenOrderedLogit),
-    HealthH1b(RegressionType.GenOrderedLogit),
+    HealthH1a(RegressionType.OrderedLogit),
+    HealthH1b(RegressionType.OrderedLogit),
     HealthH2b(RegressionType.Probit),
 
     HealthHM1Level(RegressionType.Linear),
@@ -28,6 +28,20 @@ public enum RegressionName {
     HealthHM1Case(RegressionType.Logit),
     HealthHM2CaseMales(RegressionType.Logit),
     HealthHM2CaseFemales(RegressionType.Logit),
+
+    HealthMCS1(RegressionType.Linear),
+    HealthMCS2Males(RegressionType.Linear),
+    HealthMCS2Females(RegressionType.Linear),
+
+    HealthPCS1(RegressionType.Linear),
+    HealthPCS2Males(RegressionType.Linear),
+    HealthPCS2Females(RegressionType.Linear),
+
+    LifeSatisfaction1(RegressionType.Linear),
+    LifeSatisfaction2Males(RegressionType.Linear),
+    LifeSatisfaction2Females(RegressionType.Linear),
+
+    HealthEQ5D(RegressionType.Linear),
 
     RMSE(RegressionType.Linear),
 
