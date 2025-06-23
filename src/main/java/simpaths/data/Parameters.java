@@ -3359,7 +3359,7 @@ public class Parameters {
     public static void databaseSetup(Country country, boolean executeWithGui, int startYear) {
 
         // remove database file if it exists
-        String filePath = "./input" + File.separator + "input.mv.db";
+        String filePath = getInputDirectory() + "input.mv.db";
         safeDelete(filePath);
 
         // Detect if data available; set to testing data if not
