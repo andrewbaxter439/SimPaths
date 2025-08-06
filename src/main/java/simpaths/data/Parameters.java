@@ -122,6 +122,7 @@ public class Parameters {
 		"ded",					//in education dummy
 		"der",					//return to education dummy
 		"dot",					//ethnicity
+        "dot01",				//ethnicity 6 categories
 		"dhe",					//health status
 		"dhm",					//mental health status
 		"scghq2_dv",			//mental health status case based
@@ -1129,14 +1130,14 @@ public class Parameters {
             columnsValidationLabourSupplyByEducation = 3;
         }
         else if(country.equals(Country.UK)) {
-            columnsWagesMalesNE = 30;
-            columnsWagesMalesE = 31;
-            columnsWagesFemalesNE = 30;
-            columnsWagesFemalesE = 31;
-            columnsEmploymentSelectionMalesNE = 30;
-            columnsEmploymentSelectionMalesE = 29;
-            columnsEmploymentSelectionFemalesNE = 30;
-            columnsEmploymentSelectionFemalesE = 29;
+            columnsWagesMalesNE = 33;
+            columnsWagesMalesE = 34;
+            columnsWagesFemalesNE = 33;
+            columnsWagesFemalesE = 34;
+            columnsEmploymentSelectionMalesNE = 32;
+            columnsEmploymentSelectionMalesE = 32;
+            columnsEmploymentSelectionFemalesNE = 32;
+            columnsEmploymentSelectionFemalesE = 32;
             columnsLabourSupplyUtilityMales = 19;
             columnsLabourSupplyUtilityFemales = 12;
             columnsLabourSupplyUtilityMalesWithDependent = 23;
@@ -1146,9 +1147,9 @@ public class Parameters {
             columnsLabourSupplyUtilityCouples = 64;
             columnsLabourCovid19_SE = 1;
             columnsLabourCovid19_2a_processes = 1;
-            columnsHealthH1a = 28;
-            columnsHealthH1b = 35;
-            columnsHealthH2b = 35;
+            columnsHealthH1a = 31;
+            columnsHealthH1b = 110;
+            columnsHealthH2b = 36;
             columnsHealthHM1 = 30;
             columnsHealthHM2Males = 15;
             columnsHealthHM2Females = 15;
@@ -1185,31 +1186,31 @@ public class Parameters {
             columnsUnemploymentU1c = 19;
             columnsUnemploymentU1d = 19;
             columnsFinancialDistress = 50;
-            columnsEducationE1a = 19;
-            columnsEducationE1b = 25;
-            columnsEducationE2a = 11;
-            columnsPartnershipU1a = 27;
-            columnsPartnershipU1b = 31;
+            columnsEducationE1a = 24;
+            columnsEducationE1b = 29;
+            columnsEducationE2a = 24;
+            columnsPartnershipU1a = 16;
+            columnsPartnershipU1b = 30;
             columnsPartnershipU2b = 38;
             columnsFertilityF1a = 6;
-            columnsFertilityF1b = 26;
+            columnsFertilityF1b = 36;
             columnsIncomeI1a = 19;  //*
             columnsIncomeI1b = 31;  //*
-            columnsIncomeI3a = 20;
-            columnsIncomeI3b = 29;
+            columnsIncomeI3a = 26;
+            columnsIncomeI3b = 36;
             columnsIncomeI3c = 28;  //*
             columnsIncomeI4a = 24;  //*
-            columnsIncomeI4b = 25;
-            columnsIncomeI5a = 25;
-            columnsIncomeI5b = 25;
+            columnsIncomeI4b = 31;
+            columnsIncomeI5a = 30;
+            columnsIncomeI5b = 31;
             columnsIncomeI6a = 22;  //*
             columnsIncomeI6b = 22;  //*
-            columnsIncomeI3a_selection = 20;
-            columnsIncomeI3b_selection = 29;
+            columnsIncomeI3a_selection = 26;
+            columnsIncomeI3b_selection = 36;
             columnsLeaveHomeP1a = 25;
-            columnsHomeownership = 33;
-            columnsRetirementR1a = 26;
-            columnsRetirementR1b = 31;
+            columnsHomeownership = 41;
+            columnsRetirementR1a = 33;
+            columnsRetirementR1b = 37;
             columnsChildcareC1a = 37;
             columnsChildcareC1b = 37;
             columnsValidationStudentsByAge = 10;
@@ -1420,11 +1421,11 @@ public class Parameters {
         }
 
         //Income
-        coeffCovarianceIncomeI3a = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I3a", 1, columnsIncomeI3a);
-        coeffCovarianceIncomeI3b = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I3b", 1, columnsIncomeI3b);
-        coeffCovarianceIncomeI4b = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I4b", 1, columnsIncomeI4b);
-        coeffCovarianceIncomeI5a_selection = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I5a", 1, columnsIncomeI5a);
-        coeffCovarianceIncomeI5b_amount = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I5b", 1, columnsIncomeI5b);
+        coeffCovarianceIncomeI3a = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I3a_amount", 1, columnsIncomeI3a);
+        coeffCovarianceIncomeI3b = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I3b_amount", 1, columnsIncomeI3b);
+        coeffCovarianceIncomeI4b = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I4b_amount", 1, columnsIncomeI4b);
+        coeffCovarianceIncomeI5a_selection = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I5a_selection", 1, columnsIncomeI5a);
+        coeffCovarianceIncomeI5b_amount = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I5a_amount", 1, columnsIncomeI5b);
         coeffCovarianceIncomeI3a_selection = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I3a_selection", 1, columnsIncomeI3a_selection);
         coeffCovarianceIncomeI3b_selection = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "reg_income.xlsx", countryString + "_I3b_selection", 1, columnsIncomeI3b_selection);
 
