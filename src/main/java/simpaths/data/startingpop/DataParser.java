@@ -162,10 +162,10 @@ public class DataParser {
 
 				//DEMOGRAPHIC: Long-term sick or disabled (to be used with Indicator enum when defined in Person class)
 				+ "ALTER TABLE " + personTable + " ADD sick_longterm VARCHAR_IGNORECASE;"
-				+ "UPDATE " + personTable + " SET sick_longterm = 'False' WHERE dlltsd = 0;"
-				+ "UPDATE " + personTable + " SET sick_longterm = 'True' WHERE dlltsd = 1;"
-				+ "ALTER TABLE " + personTable + " DROP COLUMN dlltsd;"
-				+ "ALTER TABLE " + personTable + " ALTER COLUMN sick_longterm RENAME TO dlltsd;"
+				+ "UPDATE " + personTable + " SET sick_longterm = 'False' WHERE dlltsd01 = 0;"
+				+ "UPDATE " + personTable + " SET sick_longterm = 'True' WHERE dlltsd01 = 1;"
+				+ "ALTER TABLE " + personTable + " DROP COLUMN dlltsd01;"
+				+ "ALTER TABLE " + personTable + " ALTER COLUMN sick_longterm RENAME TO dlltsd;" // There are two versions of this variable in the Initial Population files. We use the dlltsd01, but we rename it dlltsd fo simplicity
 
 				//DEMOGRAPHIC: Need social care (to be used with Indicator enum when defined in Person class)
 				+ "ALTER TABLE " + personTable + " ADD need_care VARCHAR_IGNORECASE;"

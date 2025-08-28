@@ -124,12 +124,14 @@ public class Parameters {
 		"dot",					//ethnicity
         "dot01",				//ethnicity 6 categories
 		"dhe",					//health status
-		"dhm",					//mental health status
+        "dhe_mcs",              //mental health - SF12 score MCS
+        "dhe_pcs",              //physical health - SF12 score PCS
+        "dhe_mcssp",            //mental health - SF12 score MCS (partner)
+        "dhe_pcssp",            //physical health - SF12 score PCS (partner)
+        "dhm",					//mental health status
 		"scghq2_dv",			//mental health status case based
 		"dhm_ghq",				//mental health status case based dummy (1 = psychologically distressed)
         "dls",                  //life satisfaction
-        "dhe_mcs",              //mental health - SF12 score MCS
-        "dhe_pcs",              //physical health - SF12 score PCS
         "financial_distress",	//financial distress
 		"dcpyy",				//years in partnership
 		"dcpagdf",				//partners age difference
@@ -141,7 +143,7 @@ public class Parameters {
 		"ypnoab",				//gross personal pension (public / occupational) income
 		"yplgrs_dv",			//gross personal employment income
 		"ynbcpdf_dv",			//difference partner income
-		"dlltsd",				//long-term sick or disabled
+		"dlltsd01",				//long-term sick or disabled (we use this -and not dlltsd- in the DataParser)
 		"sedex",				//year left education
 		"stm",					//system variable - year
 		"swv",					//system variable - wave
@@ -279,7 +281,7 @@ public class Parameters {
     //public static int MAX_AGE_IN_EDUCATION;// = MAX_AGE;//30;			// Max age a person can stay in education	//Cannot set here, as MAX_AGE is not known yet.  Now set to MAX_AGE in buildObjects in Model class.
     //public static int MAX_AGE_MARRIAGE;// = MAX_AGE;//75;  			// Max age a person can marry		//Cannot set here, as MAX_AGE is not known yet.  Now set to MAX_AGE in buildObjects in Model class.
     private static int MIN_START_YEAR = 2011; //Minimum allowed starting point. Should correspond to the oldest initial population.
-    private static int MAX_START_YEAR = 2021; //Maximum allowed starting point. Should correspond to the most recent initial population.
+    private static int MAX_START_YEAR = 2023; //Maximum allowed starting point. Should correspond to the most recent initial population.
     public static int startYear;
     public static int endYear;
     private static final int MIN_START_YEAR_TESTING = 2019;
@@ -299,7 +301,7 @@ public class Parameters {
 
     public static final boolean systemOut = true;
 
-    //Bootstrap all the regression coefficients if true, or only the female labour participation regressions when false
+    //Bootstrap all the regression coefficients if true
     public static final boolean bootstrapAll = false;
 
     //Scheduling
@@ -678,8 +680,8 @@ public class Parameters {
     /////////////////////////////////////////////////////////////////// REGRESSION OBJECTS //////////////////////////////////////////
 
     //Health
-    private static OrderedRegression regHealthH1a;
-    private static OrderedRegression regHealthH1b;
+    private static GeneralisedOrderedRegression regHealthH1a;
+    private static GeneralisedOrderedRegression regHealthH1b;
     private static BinomialRegression regHealthH2b;
 
     //Social care
@@ -738,7 +740,7 @@ public class Parameters {
     //Education
     private static BinomialRegression regEducationE1a;
     private static BinomialRegression regEducationE1b;
-    private static OrderedRegression regEducationE2a;
+    private static GeneralisedOrderedRegression regEducationE2a;
 
     //Partnership
     private static BinomialRegression regPartnershipU1a;
@@ -1109,8 +1111,8 @@ public class Parameters {
             columnsIncomeI3b_selection = 22;
             columnsLeaveHomeP1a = 19;
             columnsHomeownership = 32;
-            columnsRetirementR1a = 19;
-            columnsRetirementR1b = 24;
+            columnsRetirementR1a = 33;
+            columnsRetirementR1b = 37;
             columnsChildcareC1a = 37;
             columnsChildcareC1b = 37;
             columnsValidationStudentsByAge = 10;
@@ -1190,7 +1192,7 @@ public class Parameters {
             columnsEducationE1b = 29;
             columnsEducationE2a = 24;
             columnsPartnershipU1a = 16;
-            columnsPartnershipU1b = 30;
+            columnsPartnershipU1b = 29;
             columnsPartnershipU2b = 38;
             columnsFertilityF1a = 6;
             columnsFertilityF1b = 36;
@@ -1409,7 +1411,7 @@ public class Parameters {
         }
 
         //Partnership - parameters for matching based on wage and age differential
-        meanCovarianceParametricMatching = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "scenario_parametricMatching.xlsx", countryString, 1, 1);
+        meanCovarianceParametricMatching = ExcelAssistant.loadCoefficientMap(Parameters.getInputDirectory() + "scenario_parametricMatching.xlsx", "Parameters", 1, 1);
 
         //Fertility
         if (country.equals(Country.UK)) {
@@ -1557,8 +1559,8 @@ public class Parameters {
         }
 
         //Health
-        regHealthH1a = new OrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1a);
-        regHealthH1b = new OrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1b);
+        regHealthH1a = new GeneralisedOrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1a);
+        regHealthH1b = new GeneralisedOrderedRegression<>(RegressionType.GenOrderedLogit, Dhe.class, coeffCovarianceHealthH1b);
         regHealthH2b = new BinomialRegression(RegressionType.Probit, Indicator.class, coeffCovarianceHealthH2b);
 
         //Social care
@@ -1612,7 +1614,7 @@ public class Parameters {
 
         regEducationE1a = new BinomialRegression(RegressionType.Probit, Indicator.class, coeffCovarianceEducationE1a);
         regEducationE1b = new BinomialRegression(RegressionType.Probit, Indicator.class, coeffCovarianceEducationE1b);
-        regEducationE2a = new OrderedRegression<>(RegressionType.GenOrderedLogit, Education.class, coeffCovarianceEducationE2a);
+        regEducationE2a = new GeneralisedOrderedRegression<>(RegressionType.GenOrderedLogit, Education.class, coeffCovarianceEducationE2a);
 
         //Partnership
         if (country.equals(Country.UK)) {
@@ -2075,8 +2077,8 @@ public class Parameters {
         Parameters.employmentsFurloughedFlex = employmentsFurloughedFlex;
     }
 
-    public static OrderedRegression getRegHealthH1a() { return regHealthH1a; }
-    public static OrderedRegression getRegHealthH1b() { return regHealthH1b; }
+    public static GeneralisedOrderedRegression getRegHealthH1a() { return regHealthH1a; }
+    public static GeneralisedOrderedRegression getRegHealthH1b() { return regHealthH1b; }
     public static BinomialRegression getRegHealthH2b() { return regHealthH2b; }
 
     public static BinomialRegression getRegReceiveCareS1a() { return regReceiveCareS1a; }
@@ -2126,7 +2128,7 @@ public class Parameters {
 
     public static BinomialRegression getRegEducationE1a() {return regEducationE1a;}
     public static BinomialRegression getRegEducationE1b() {return regEducationE1b;}
-    public static OrderedRegression getRegEducationE2a() {return regEducationE2a;}
+    public static GeneralisedOrderedRegression getRegEducationE2a() {return regEducationE2a;}
 
     public static LinearRegression getRegEQ5D() { return regHealthEQ5D; };
 
